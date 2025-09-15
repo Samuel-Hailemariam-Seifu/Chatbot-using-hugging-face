@@ -7,11 +7,11 @@ interface Message {
   content: string
 }
 
-export default function Home() {
+export default function DemoPage() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: "Hi! I'm your free chatbot. Ask me anything.",
+      content: "Hi! I'm the demo chatbot. This version works without any external APIs - perfect for testing!",
     },
   ])
   const [input, setInput] = useState('')
@@ -36,7 +36,7 @@ export default function Home() {
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch('/api/chat-demo', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -45,8 +45,7 @@ export default function Home() {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
 
       const data = await response.json()
@@ -57,7 +56,7 @@ export default function Home() {
         ...prev,
         {
           role: 'assistant',
-          content: `Error: ${error instanceof Error ? error.message : 'Sorry, I encountered an error. Please try again.'}`,
+          content: `Error: ${error instanceof Error ? error.message : 'Sorry, I encountered an error.'}`,
         },
       ])
     } finally {
@@ -68,20 +67,12 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-green-500 text-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">Free AI Chatbot</h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Powered by Hugging Face models (with fallback mode)
+          <h1 className="text-2xl font-bold">Demo Chatbot</h1>
+          <p className="text-sm mt-1">
+            This version works without external APIs - perfect for testing!
           </p>
-          <div className="mt-2">
-            <a 
-              href="/demo" 
-              className="text-sm text-blue-600 hover:text-blue-800 underline"
-            >
-              Try Demo Version (No API required)
-            </a>
-          </div>
         </div>
       </header>
 
@@ -126,13 +117,13 @@ export default function Home() {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 placeholder="Type your message..."
-                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 disabled={isLoading}
               />
               <button
                 type="submit"
                 disabled={isLoading || !input.trim()}
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
                 Send
               </button>
@@ -145,7 +136,7 @@ export default function Home() {
       <footer className="bg-white border-t">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <p className="text-xs text-gray-500 text-center">
-            Swap models via .env → HF_MODEL
+            Demo Mode - No external APIs required. Try: "Hello", "How are you?", "What's your name?"
           </p>
         </div>
       </footer>

@@ -22,10 +22,10 @@ A production-ready, free AI chatbot built with Next.js 14+ and powered by Huggin
 ## 📸 Screenshots
 
 ![Hero Screenshot](./public/hero.png)
-*Clean, modern chat interface*
+_Clean, modern chat interface_
 
 ![Chat Screenshot](./public/chat.png)
-*Responsive message bubbles with loading states*
+_Responsive message bubbles with loading states_
 
 ## 🛠️ Setup
 
@@ -46,7 +46,7 @@ npm install
 ### 2. Get Hugging Face Token
 
 1. Go to [Hugging Face](https://huggingface.co/settings/tokens)
-2. Create a new token (read access)
+2. Create a new token (write access - required for Inference API)
 3. Copy the token
 
 ### 3. Environment Setup
@@ -56,6 +56,7 @@ cp env.example .env.local
 ```
 
 Edit `.env.local`:
+
 ```env
 HF_TOKEN=your_huggingface_token_here
 HF_MODEL=mistralai/Mistral-7B-Instruct-v0.2
@@ -183,6 +184,7 @@ free-chatbot/
 ### Error Handling
 
 The app handles common errors gracefully:
+
 - Missing `HF_TOKEN` → Clear error message
 - API timeouts → Retry mechanism
 - Invalid responses → Fallback messages
