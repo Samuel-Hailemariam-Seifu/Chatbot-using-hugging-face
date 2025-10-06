@@ -11,6 +11,13 @@ export async function GET() {
     })
   }
 
+  if (!groq) {
+    return NextResponse.json({
+      status: 'error',
+      message: 'Groq client not initialized'
+    })
+  }
+
   try {
     const completion = await groq.chat.completions.create({
       messages: [

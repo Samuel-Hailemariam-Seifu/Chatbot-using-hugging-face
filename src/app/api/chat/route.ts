@@ -14,6 +14,10 @@ interface ChatRequest {
 }
 
 export async function POST(request: NextRequest) {
+  // Parse request body first
+  const body: ChatRequest = await request.json()
+  const { messages, conversationId, userId } = body
+
   try {
     // Check for required environment variables
     const groqApiKey = process.env.GROQ_API_KEY
@@ -27,10 +31,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
-
-    // Parse request body
-    const body: ChatRequest = await request.json()
-    const { messages, conversationId, userId } = body
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
@@ -54,8 +54,11 @@ export async function POST(request: NextRequest) {
     // Prepare messages for Groq
     const systemPrompt = userSettings?.system_prompt || 'You are a helpful, friendly AI assistant.'
     const groqMessages = [
-      { role: 'system', content: systemPrompt },
-      ...messages
+      { role: 'system' as const, content: systemPrompt },
+      ...messages.map(msg => ({
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content
+      }))
     ]
 
     console.log('Groq API Debug:', {
@@ -68,10 +71,11 @@ export async function POST(request: NextRequest) {
     // Call Groq API
     let reply = 'No response generated'
     let usage = null
+    let completion = null
 
     if (groq) {
       try {
-        const completion = await groq.chat.completions.create({
+        completion = await groq.chat.completions.create({
           messages: groqMessages,
           model: model,
           temperature: userSettings?.temperature || 0.7,
@@ -124,7 +128,7 @@ export async function POST(request: NextRequest) {
             metadata: { 
               model, 
               temperature: userSettings?.temperature || 0.7,
-              tokens_used: completion.usage?.total_tokens || 0
+              tokens_used: completion?.usage?.total_tokens || 0
             }
           })
 
@@ -141,7 +145,7 @@ export async function POST(request: NextRequest) {
             user_id: userId,
             conversation_id: conversationId,
             message_count: messages.length + 1,
-            total_tokens: (completion.usage?.total_tokens || 0) + (userSettings?.total_tokens || 0)
+            total_tokens: (completion?.usage?.total_tokens || 0) + (userSettings?.total_tokens || 0)
           })
 
       } catch (dbError) {

@@ -3,10 +3,10 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const conversationId = params.id
+    const { id: conversationId } = await params
 
     const { data: conversation, error } = await supabaseAdmin
       .from('conversations')
@@ -47,10 +47,10 @@ export async function GET(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const conversationId = params.id
+    const { id: conversationId } = await params
 
     const { error } = await supabaseAdmin
       .from('conversations')
