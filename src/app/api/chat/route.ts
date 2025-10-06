@@ -1,35 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
+import groq from '@/lib/groq'
+import { supabaseAdmin } from '@/lib/supabase'
 
 interface Message {
-  role: 'user' | 'assistant'
+  role: 'user' | 'assistant' | 'system'
   content: string
 }
 
 interface ChatRequest {
   messages: Message[]
-}
-
-interface HuggingFaceResponse {
-  generated_text?: string
-  error?: string
+  conversationId?: string
+  userId?: string
 }
 
 export async function POST(request: NextRequest) {
   try {
     // Check for required environment variables
-    const hfToken = process.env.HF_TOKEN
-    const hfModel = process.env.HF_MODEL || 'gpt2'
+    const groqApiKey = process.env.GROQ_API_KEY
+    const model = process.env.GROQ_MODEL || 'llama-3.1-8b-instant'
 
-    console.log('API Debug:', {
-      hasToken: !!hfToken,
-      tokenPrefix: hfToken?.substring(0, 10) + '...',
-      model: hfModel
-    })
-
-    if (!hfToken || hfToken === 'your_huggingface_token_here') {
+    if (!groqApiKey) {
       return NextResponse.json(
         { 
-          error: 'Please set up your Hugging Face token. Get one from https://huggingface.co/settings/tokens and add it to .env.local as HF_TOKEN=your_actual_token' 
+          error: 'GROQ_API_KEY environment variable is required. Get one from https://console.groq.com/keys' 
         },
         { status: 500 }
       )
@@ -37,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body: ChatRequest = await request.json()
-    const { messages } = body
+    const { messages, conversationId, userId } = body
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
@@ -46,83 +39,142 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Build conversation context
-    const systemPrompt = 'You are a helpful, concise assistant. Provide clear and accurate responses.'
-    const conversation = messages
-      .map(msg => `${msg.role === 'user' ? 'Human' : 'Assistant'}: ${msg.content}`)
-      .join('\n')
-    
-    const prompt = `${systemPrompt}\n\n${conversation}\nAssistant:`
-
-    // Call Hugging Face Inference API with simpler parameters
-    const hfResponse = await fetch(
-      `https://api-inference.huggingface.co/models/${hfModel}`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${hfToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          inputs: prompt,
-          parameters: {
-            max_new_tokens: 100,
-            temperature: 0.7,
-            return_full_text: false,
-          },
-        }),
-      }
-    )
-
-    if (!hfResponse.ok) {
-      const errorText = await hfResponse.text()
-      console.error('Hugging Face API error:', {
-        status: hfResponse.status,
-        statusText: hfResponse.statusText,
-        error: errorText
-      })
+    // Get user settings if userId is provided
+    let userSettings = null
+    if (userId) {
+      const { data: settings } = await supabaseAdmin
+        .from('user_settings')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
       
-      // Fallback to demo response when API fails
+      userSettings = settings
+    }
+
+    // Prepare messages for Groq
+    const systemPrompt = userSettings?.system_prompt || 'You are a helpful, friendly AI assistant.'
+    const groqMessages = [
+      { role: 'system', content: systemPrompt },
+      ...messages
+    ]
+
+    console.log('Groq API Debug:', {
+      hasApiKey: !!groqApiKey,
+      model: model,
+      messageCount: messages.length,
+      userId: userId
+    })
+
+    // Call Groq API
+    let reply = 'No response generated'
+    let usage = null
+
+    if (groq) {
+      try {
+        const completion = await groq.chat.completions.create({
+          messages: groqMessages,
+          model: model,
+          temperature: userSettings?.temperature || 0.7,
+          max_tokens: userSettings?.max_tokens || 1000,
+          stream: false,
+        })
+
+        reply = completion.choices[0]?.message?.content || 'No response generated'
+        usage = completion.usage
+      } catch (groqError) {
+        console.error('Groq API error:', groqError)
+        // Fall through to fallback response
+      }
+    }
+
+    // Fallback if Groq is not configured or fails
+    if (reply === 'No response generated') {
       const lastMessage = messages[messages.length - 1]
       const userInput = lastMessage?.content || ''
       
-      let fallbackReply = 'I\'m having trouble connecting to the AI model right now, but I can still help!'
-      
       if (userInput.toLowerCase().includes('hello') || userInput.toLowerCase().includes('hi')) {
-        fallbackReply = 'Hello! The AI model is temporarily unavailable, but I\'m here to chat!'
-      } else if (userInput.toLowerCase().includes('how are you')) {
-        fallbackReply = 'I\'m doing well! The AI service is having issues, but I\'m still working in demo mode.'
+        reply = 'Hello! I\'m a demo chatbot. To use real AI, please configure your Groq API key.'
       } else if (userInput.toLowerCase().includes('help')) {
-        fallbackReply = 'I\'m in fallback mode right now. The Hugging Face API seems to be having issues. Try again later or check your token setup.'
+        reply = 'I\'m in demo mode. Please set up your GROQ_API_KEY in .env.local to use real AI features.'
       } else {
-        fallbackReply = `You said: "${userInput}". The AI model is currently unavailable, but I received your message! This is a fallback response.`
+        reply = `You said: "${userInput}". I'm in demo mode. Please configure your Groq API key for real AI responses.`
       }
-      
-      return NextResponse.json({ reply: fallbackReply })
     }
 
-    const hfData: HuggingFaceResponse | HuggingFaceResponse[] = await hfResponse.json()
-    
-    // Handle both single response and array response formats
-    let reply = ''
-    if (Array.isArray(hfData)) {
-      reply = hfData[0]?.generated_text || 'No response generated'
-    } else {
-      reply = hfData.generated_text || hfData.error || 'No response generated'
+    // Save to database if conversationId is provided
+    if (conversationId && userId) {
+      try {
+        // Save user message
+        await supabaseAdmin
+          .from('messages')
+          .insert({
+            conversation_id: conversationId,
+            role: 'user',
+            content: messages[messages.length - 1]?.content || '',
+            metadata: { model, temperature: userSettings?.temperature || 0.7 }
+          })
+
+        // Save assistant message
+        await supabaseAdmin
+          .from('messages')
+          .insert({
+            conversation_id: conversationId,
+            role: 'assistant',
+            content: reply,
+            metadata: { 
+              model, 
+              temperature: userSettings?.temperature || 0.7,
+              tokens_used: completion.usage?.total_tokens || 0
+            }
+          })
+
+        // Update conversation timestamp
+        await supabaseAdmin
+          .from('conversations')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', conversationId)
+
+        // Update analytics
+        await supabaseAdmin
+          .from('chat_analytics')
+          .upsert({
+            user_id: userId,
+            conversation_id: conversationId,
+            message_count: messages.length + 1,
+            total_tokens: (completion.usage?.total_tokens || 0) + (userSettings?.total_tokens || 0)
+          })
+
+      } catch (dbError) {
+        console.error('Database error:', dbError)
+        // Don't fail the request if database save fails
+      }
     }
 
-    // Clean up the response
-    reply = reply.trim()
-    if (reply.startsWith('Assistant:')) {
-      reply = reply.replace(/^Assistant:\s*/, '')
-    }
+    return NextResponse.json({ 
+      reply,
+      usage: usage,
+      model: model
+    })
 
-    return NextResponse.json({ reply })
   } catch (error) {
     console.error('Chat API error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    
+    // Fallback response
+    const lastMessage = messages?.[messages.length - 1]
+    const userInput = lastMessage?.content || ''
+    
+    let fallbackReply = 'I\'m having trouble connecting to the AI service right now, but I can still help!'
+    
+    if (userInput.toLowerCase().includes('hello') || userInput.toLowerCase().includes('hi')) {
+      fallbackReply = 'Hello! The AI service is temporarily unavailable, but I\'m here to chat!'
+    } else if (userInput.toLowerCase().includes('how are you')) {
+      fallbackReply = 'I\'m doing well! The AI service is having issues, but I\'m still working in fallback mode.'
+    } else if (userInput.toLowerCase().includes('help')) {
+      fallbackReply = 'I\'m in fallback mode right now. The Groq API seems to be having issues. Please check your GROQ_API_KEY and try again later.'
+    } else {
+      fallbackReply = `You said: "${userInput}". The AI model is currently unavailable, but I received your message! This is a fallback response.`
+    }
+    
+    return NextResponse.json({ reply: fallbackReply })
   }
 }
