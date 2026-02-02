@@ -142,7 +142,7 @@ export default function Home() {
 
             await supabase.from('user_settings').insert({
               user_id: data.user.id,
-              model: 'llama-3.1-8b-instant',
+              model: 'meta-llama/Llama-3.2-3B-Instruct',
               temperature: 0.7,
               max_tokens: 1000,
               system_prompt: 'You are a helpful, friendly AI assistant.'

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 
 export default function SetupPage() {
   const [envStatus, setEnvStatus] = useState<any>(null)
-  const [groqStatus, setGroqStatus] = useState<any>(null)
+  const [hfStatus, setHfStatus] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -15,10 +15,10 @@ export default function SetupPage() {
         const envData = await envResponse.json()
         setEnvStatus(envData)
 
-        // Check Groq API
-        const groqResponse = await fetch('/api/test-groq')
-        const groqData = await groqResponse.json()
-        setGroqStatus(groqData)
+        // Check Hugging Face API
+        const hfResponse = await fetch('/api/test-groq')
+        const hfData = await hfResponse.json()
+        setHfStatus(hfData)
       } catch (error) {
         console.error('Setup check error:', error)
       } finally {
@@ -70,11 +70,11 @@ export default function SetupPage() {
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span>Groq API Key:</span>
+                <span>Hugging Face Token:</span>
                 <span className={`px-2 py-1 rounded text-sm ${
-                  envStatus?.environment?.GROQ_API_KEY ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  envStatus?.environment?.HF_TOKEN ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                 }`}>
-                  {envStatus?.environment?.GROQ_API_KEY ? '✅ Set' : '❌ Missing'}
+                  {envStatus?.environment?.HF_TOKEN ? '✅ Set' : '❌ Missing'}
                 </span>
               </div>
             </div>
@@ -85,11 +85,11 @@ export default function SetupPage() {
             <h2 className="text-xl font-semibold mb-4">API Status</h2>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span>Groq API:</span>
+                <span>Hugging Face API:</span>
                 <span className={`px-2 py-1 rounded text-sm ${
-                  groqStatus?.status === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  hfStatus?.status === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                 }`}>
-                  {groqStatus?.status === 'success' ? '✅ Working' : '❌ Failed'}
+                  {hfStatus?.status === 'success' ? '✅ Working' : '❌ Failed'}
                 </span>
               </div>
               <div className="flex items-center justify-between">

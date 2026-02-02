@@ -10,12 +10,11 @@ export async function GET() {
     })
   }
 
-  // Test with a simple, reliable model
+  // Test with Llama models (free on Hugging Face)
   const models = [
-    'gpt2',
-    'distilgpt2', 
-    'facebook/blenderbot-400M-distill',
-    'google/flan-t5-base'
+    'meta-llama/Llama-3.2-3B-Instruct',
+    'meta-llama/Llama-3.2-1B-Instruct',
+    'meta-llama/Llama-3.1-8B-Instruct'
   ]
 
   for (const model of models) {
@@ -29,10 +28,11 @@ export async function GET() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          inputs: 'Hello',
+          inputs: '<|user|>\nHello\n<|assistant|>\n',
           parameters: {
-            max_new_tokens: 10,
+            max_new_tokens: 20,
             return_full_text: false,
+            temperature: 0.7,
           },
         }),
       })
