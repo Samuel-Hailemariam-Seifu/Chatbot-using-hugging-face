@@ -248,6 +248,38 @@ export default function Home() {
     }
   }
 
+  const deleteConversation = async (conversationId: string, e?: React.MouseEvent) => {
+    e?.stopPropagation() // Prevent triggering the conversation click
+    
+    if (!confirm('Are you sure you want to delete this conversation? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/conversations/${conversationId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete conversation')
+      }
+
+      // If deleted conversation was current, clear it
+      if (currentConversation?.id === conversationId) {
+        setCurrentConversation(null)
+        setMessages([])
+      }
+
+      // Reload conversations list
+      if (user) {
+        await loadConversations(user.id)
+      }
+    } catch (error) {
+      console.error('Failed to delete conversation:', error)
+      alert('Failed to delete conversation. Please try again.')
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || isLoading || !user) return
@@ -546,9 +578,9 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex">
-      {/* Sidebar */}
-      <div className="w-80 bg-gray-50 border-r border-gray-200 flex flex-col">
+    <div className="h-screen bg-white flex overflow-hidden">
+      {/* Sidebar - Fixed, scrollable, full height */}
+      <div className="w-80 bg-gray-50 border-r border-gray-200 flex flex-col h-full fixed left-0 top-0">
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
@@ -580,47 +612,71 @@ export default function Home() {
           <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wider">Recent Conversations</h3>
           <div className="space-y-2">
             {conversations.map((conversation) => (
-              <button
+              <div
                 key={conversation.id}
-                onClick={() => loadConversation(conversation.id)}
-                className={`w-full text-left p-4 rounded-lg border transition-all duration-200 ${
+                className={`group relative w-full text-left p-4 rounded-lg border transition-all duration-200 ${
                   currentConversation?.id === conversation.id
                     ? 'bg-white border-gray-300 shadow-sm'
                     : 'bg-transparent border-gray-200 hover:bg-white hover:border-gray-300 hover:shadow-sm'
                 }`}
               >
-                <div className="font-medium text-sm text-gray-900 truncate mb-1">{conversation.title}</div>
-                <div className="text-xs text-gray-500">
-                  {new Date(conversation.updated_at).toLocaleDateString()}
-                </div>
-              </button>
+                <button
+                  onClick={() => loadConversation(conversation.id)}
+                  className="w-full text-left"
+                >
+                  <div className="font-medium text-sm text-gray-900 truncate mb-1 pr-8">{conversation.title}</div>
+                  <div className="text-xs text-gray-500">
+                    {new Date(conversation.updated_at).toLocaleDateString()}
+                  </div>
+                </button>
+                <button
+                  onClick={(e) => deleteConversation(conversation.id, e)}
+                  className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded hover:bg-red-50"
+                  title="Delete conversation"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
             ))}
           </div>
         </div>
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col bg-white">
+      <div className="flex-1 flex flex-col bg-white ml-80 h-full overflow-hidden">
         {currentConversation ? (
           <>
             {/* Chat Header */}
-            <div className="bg-white border-b border-gray-200 p-6">
+            <div className="bg-white border-b border-gray-200 p-6 flex-shrink-0">
               <div className="flex items-center justify-between">
-                <div>
+                <div className="flex-1">
                   <h2 className="text-lg font-semibold text-gray-900">{currentConversation.title}</h2>
                   <p className="text-sm text-gray-500 mt-1">
                     {messages.length} messages • {new Date(currentConversation.updated_at).toLocaleDateString()}
                   </p>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <span className="text-xs text-gray-500">AI Online</span>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                    <span className="text-xs text-gray-500">AI Online</span>
+                  </div>
+                  <button
+                    onClick={() => deleteConversation(currentConversation.id)}
+                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                    title="Delete conversation"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
               {messages.map((message, index) => (
                 <div
                   key={index}
@@ -671,7 +727,7 @@ export default function Home() {
             </div>
 
             {/* Input */}
-            <div className="border-t border-gray-200 p-6 bg-gray-50">
+            <div className="border-t border-gray-200 p-6 bg-gray-50 flex-shrink-0">
               <form onSubmit={handleSubmit} className="flex gap-3">
                 <input
                   type="text"

@@ -68,27 +68,27 @@ export async function callHuggingFaceAPI(
   const prompt = formatMessagesForLlama(messages)
 
   try {
-    // Use the new router endpoint
-    const response = await fetch(
-      `https://router.huggingface.co/models/${hfModel}`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${hfApiKey}`,
-          'Content-Type': 'application/json',
+    // Try the original inference API endpoint first (most reliable)
+    // If that fails, we can try router endpoint
+    const apiUrl = `https://api-inference.huggingface.co/models/${hfModel}`
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${hfApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        inputs: prompt,
+        parameters: {
+          max_new_tokens: max_tokens,
+          temperature: temperature,
+          return_full_text: false,
+          top_p: 0.9,
+          repetition_penalty: 1.1,
         },
-        body: JSON.stringify({
-          inputs: prompt,
-          parameters: {
-            max_new_tokens: max_tokens,
-            temperature: temperature,
-            return_full_text: false,
-            top_p: 0.9,
-            repetition_penalty: 1.1,
-          },
-        }),
-      }
-    )
+      }),
+    })
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -105,7 +105,12 @@ export async function callHuggingFaceAPI(
 
       // Handle model loading
       if (response.status === 503) {
-        errorMessage = 'Model is loading. Please wait a moment and try again.'
+        errorMessage = 'Model is loading. Please wait 10-30 seconds and try again.'
+      }
+      
+      // Handle not found - might be model issue
+      if (response.status === 404) {
+        errorMessage = `Model "${hfModel}" not found or not available. Please check the model name is correct. Try: meta-llama/Llama-3.2-3B-Instruct or google/flan-t5-base`
       }
 
       throw new Error(errorMessage)
