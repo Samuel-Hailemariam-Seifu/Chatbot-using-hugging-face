@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
         email,
         password,
         options: {
+          emailRedirectTo: undefined,
           data: {
             name: name || email.split('@')[0]
           }

@@ -13,7 +13,7 @@ export async function GET() {
 
   // Test the token by making a simple API call
   try {
-    const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium', {
+    const response = await fetch('https://router.huggingface.co/models/microsoft/DialoGPT-medium', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${hfToken}`,

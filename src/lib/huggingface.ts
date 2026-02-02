@@ -6,8 +6,14 @@
 const hfApiKey = process.env.HF_TOKEN
 const hfModel = process.env.HF_MODEL || 'meta-llama/Llama-3.2-3B-Instruct'
 
-if (!hfApiKey) {
-  console.warn('HF_TOKEN not found. Hugging Face features will be disabled.')
+// Check if token is placeholder or invalid
+const isPlaceholderToken = !hfApiKey || 
+  hfApiKey === 'your_huggingface_token_here' || 
+  !hfApiKey.startsWith('hf_')
+
+if (isPlaceholderToken) {
+  console.warn('HF_TOKEN not found or is placeholder. Hugging Face features will be disabled.')
+  console.warn('Please update your .env.local file with a valid token from https://huggingface.co/settings/tokens')
 }
 
 interface HuggingFaceResponse {
@@ -51,8 +57,9 @@ export async function callHuggingFaceAPI(
     max_tokens?: number
   } = {}
 ): Promise<{ content: string; usage?: any }> {
-  if (!hfApiKey) {
-    throw new Error('HF_TOKEN environment variable is required. Get one from https://huggingface.co/settings/tokens')
+  // Check for placeholder or invalid token
+  if (!hfApiKey || hfApiKey === 'your_huggingface_token_here' || !hfApiKey.startsWith('hf_')) {
+    throw new Error('HF_TOKEN is not configured. Please update .env.local with a valid token from https://huggingface.co/settings/tokens. Token should start with "hf_"')
   }
 
   const { temperature = 0.7, max_tokens = 1000 } = options
@@ -61,8 +68,9 @@ export async function callHuggingFaceAPI(
   const prompt = formatMessagesForLlama(messages)
 
   try {
+    // Use the new router endpoint
     const response = await fetch(
-      `https://api-inference.huggingface.co/models/${hfModel}`,
+      `https://router.huggingface.co/models/${hfModel}`,
       {
         method: 'POST',
         headers: {

@@ -120,6 +120,7 @@ export default function Home() {
           email: authData.email,
           password: authData.password,
           options: {
+            emailRedirectTo: undefined,
             data: {
               name: authData.name || authData.email.split('@')[0]
             }
@@ -288,18 +289,35 @@ export default function Home() {
       })
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        // Try to get error message from response
+        let errorMessage = `HTTP error! status: ${response.status}`
+        try {
+          const errorData = await response.json()
+          if (errorData.error) {
+            errorMessage = errorData.error
+          }
+        } catch {
+          // If response is not JSON, use default message
+        }
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
+      
+      // Check if response has an error
+      if (data.error) {
+        throw new Error(data.error)
+      }
+      
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply }])
     } catch (error) {
       console.error('Error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Sorry, I encountered an error. Please try again.'
       setMessages(prev => [
         ...prev,
         {
           role: 'assistant',
-          content: `Error: ${error instanceof Error ? error.message : 'Sorry, I encountered an error. Please try again.'}`,
+          content: `❌ Error: ${errorMessage}`,
         },
       ])
     } finally {

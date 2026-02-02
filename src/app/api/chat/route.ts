@@ -23,10 +23,11 @@ export async function POST(request: NextRequest) {
     const hfToken = process.env.HF_TOKEN
     const model = hfModel || 'meta-llama/Llama-3.2-3B-Instruct'
 
-    if (!hfToken) {
+    // Check if token is placeholder or invalid
+    if (!hfToken || hfToken === 'your_huggingface_token_here' || !hfToken.startsWith('hf_')) {
       return NextResponse.json(
         { 
-          error: 'HF_TOKEN environment variable is required. Get one from https://huggingface.co/settings/tokens' 
+          error: 'HF_TOKEN is not configured. Please update .env.local with a valid token from https://huggingface.co/settings/tokens. Token should start with "hf_" and restart your dev server.' 
         },
         { status: 500 }
       )
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
     // Call Hugging Face API
     let reply = 'No response generated'
     let usage = null
+    let apiError: string | null = null
 
     try {
       const result = await callHuggingFaceAPI(hfMessages, {
@@ -80,8 +82,15 @@ export async function POST(request: NextRequest) {
 
       reply = result.content || 'No response generated'
       usage = result.usage
+      
+      // If reply is empty or just whitespace, treat as error
+      if (!reply || reply.trim().length === 0) {
+        apiError = 'Hugging Face API returned empty response'
+        reply = 'No response generated'
+      }
     } catch (hfError) {
       console.error('Hugging Face API error:', hfError)
+      apiError = hfError instanceof Error ? hfError.message : 'Unknown error from Hugging Face API'
       // Fall through to fallback response
     }
 
@@ -90,12 +99,17 @@ export async function POST(request: NextRequest) {
       const lastMessage = messages[messages.length - 1]
       const userInput = lastMessage?.content || ''
       
-      if (userInput.toLowerCase().includes('hello') || userInput.toLowerCase().includes('hi')) {
-        reply = 'Hello! I\'m a demo chatbot. To use real AI, please configure your Hugging Face token.'
-      } else if (userInput.toLowerCase().includes('help')) {
-        reply = 'I\'m in demo mode. Please set up your HF_TOKEN in .env.local to use real AI features.'
+      // Show the actual error if available
+      if (apiError) {
+        reply = `❌ Error: ${apiError}\n\nPlease check:\n1. Your HF_TOKEN is valid\n2. The model is available\n3. Check server logs for details`
       } else {
-        reply = `You said: "${userInput}". I'm in demo mode. Please configure your Hugging Face token for real AI responses.`
+        if (userInput.toLowerCase().includes('hello') || userInput.toLowerCase().includes('hi')) {
+          reply = 'Hello! I\'m a demo chatbot. To use real AI, please configure your Hugging Face token.'
+        } else if (userInput.toLowerCase().includes('help')) {
+          reply = 'I\'m in demo mode. Please set up your HF_TOKEN in .env.local to use real AI features.'
+        } else {
+          reply = `You said: "${userInput}". I'm in demo mode. Please configure your Hugging Face token for real AI responses.`
+        }
       }
     }
 
