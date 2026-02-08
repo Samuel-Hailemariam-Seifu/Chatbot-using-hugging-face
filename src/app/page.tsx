@@ -486,8 +486,102 @@ export default function Home() {
           </div>
         </nav>
 
-        {!showAuth ? (
-          <div>
+        {/* Auth Modal Overlay */}
+        {showAuth && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 relative">
+              <button
+                onClick={() => setShowAuth(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-all"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+              <div className="mb-6">
+                <div className="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center mb-4">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-semibold text-slate-900">
+                  {authMode === 'signin' ? 'Welcome back' : 'Create your account'}
+                </h2>
+                <p className="text-slate-500 mt-1 text-sm">
+                  {authMode === 'signin' ? 'Sign in to continue' : 'Get started for free'}
+                </p>
+              </div>
+
+              <form onSubmit={handleAuth} className="space-y-3">
+                {authMode === 'signup' && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                    <input
+                      type="text"
+                      value={authData.name}
+                      onChange={(e) => setAuthData({...authData, name: e.target.value})}
+                      className="w-full border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent bg-white text-slate-900 placeholder:text-slate-400"
+                      placeholder="Your name"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={authData.email}
+                    onChange={(e) => setAuthData({...authData, email: e.target.value})}
+                    className="w-full border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent bg-white text-slate-900 placeholder:text-slate-400"
+                    placeholder="you@example.com"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                  <input
+                    type="password"
+                    value={authData.password}
+                    onChange={(e) => setAuthData({...authData, password: e.target.value})}
+                    className="w-full border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent bg-white text-slate-900 placeholder:text-slate-400"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-slate-900 text-white py-2.5 px-4 rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors mt-1"
+                >
+                  {isLoading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Please wait...
+                    </span>
+                  ) : (authMode === 'signin' ? 'Sign in' : 'Create account')}
+                </button>
+
+                <div className="text-center pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setAuthMode(authMode === 'signin' ? 'signup' : 'signin')}
+                    className="text-slate-500 hover:text-slate-900 text-sm transition-colors"
+                  >
+                    {authMode === 'signin' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        <div>
             {/* Hero Section */}
             <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 md:pt-24 pb-16">
               <div className="text-center max-w-3xl mx-auto">
