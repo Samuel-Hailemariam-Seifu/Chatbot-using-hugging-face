@@ -35,6 +35,7 @@ export default function Home() {
   const [authData, setAuthData] = useState({ email: '', password: '', name: '' })
   const [showNewConvoModal, setShowNewConvoModal] = useState(false)
   const [newConvoTitle, setNewConvoTitle] = useState('')
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -46,7 +47,6 @@ export default function Home() {
   }, [messages])
 
   useEffect(() => {
-    // Check if Supabase is properly configured
     const isSupabaseConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && 
       process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co'
 
@@ -55,7 +55,6 @@ export default function Home() {
       return
     }
 
-    // Check for existing session
     const getSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession()
@@ -74,10 +73,14 @@ export default function Home() {
     }
     getSession()
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state change:', { event, session })
+        console.log('Auth state change:', { event, session: session ? 'Session exists' : 'No session' })
+        
+        if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
+          console.log('Auth event:', event)
+        }
+        
         if (session?.user) {
           setUser({
             id: session.user.id,
@@ -114,7 +117,19 @@ export default function Home() {
     setIsLoading(true)
 
     try {
-      // Use Supabase client directly instead of API route
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      if (!supabaseUrl || supabaseUrl === 'https://placeholder.supabase.co') {
+        alert('Supabase is not configured. Please set up your Supabase credentials in .env.local')
+        setIsLoading(false)
+        return
+      }
+
+      if (!authData.email || !authData.password) {
+        alert('Please enter both email and password')
+        setIsLoading(false)
+        return
+      }
+
       if (authMode === 'signup') {
         const { data, error } = await supabase.auth.signUp({
           email: authData.email,
@@ -133,7 +148,6 @@ export default function Home() {
         }
 
         if (data.user) {
-          // Create user profile and settings
           try {
             await supabase.from('users').insert({
               id: data.user.id,
@@ -143,7 +157,7 @@ export default function Home() {
 
             await supabase.from('user_settings').insert({
               user_id: data.user.id,
-              model: 'meta-llama/Llama-3.2-3B-Instruct',
+              model: 'llama-3.1-8b-instant',
               temperature: 0.7,
               max_tokens: 1000,
               system_prompt: 'You are a helpful, friendly AI assistant.'
@@ -162,7 +176,22 @@ export default function Home() {
         })
 
         if (error) {
-          alert(error.message)
+          console.error('Sign in error details:', {
+            message: error.message,
+            status: error.status,
+            name: error.name
+          })
+          
+          let errorMessage = error.message
+          if (error.message.includes('Invalid login credentials')) {
+            errorMessage = 'Invalid email or password. Please check your credentials and try again.'
+          } else if (error.message.includes('Email not confirmed')) {
+            errorMessage = 'Please check your email and confirm your account before signing in.'
+          } else if (error.message.includes('User not found')) {
+            errorMessage = 'No account found with this email. Please sign up first.'
+          }
+          
+          alert(errorMessage)
           return
         }
 
@@ -186,7 +215,6 @@ export default function Home() {
         console.error('Sign out error:', error)
         alert('Failed to sign out. Please try again.')
       } else {
-        // State will be automatically updated by the auth listener
         setUser(null)
         setConversations([])
         setCurrentConversation(null)
@@ -249,7 +277,7 @@ export default function Home() {
   }
 
   const deleteConversation = async (conversationId: string, e?: React.MouseEvent) => {
-    e?.stopPropagation() // Prevent triggering the conversation click
+    e?.stopPropagation()
     
     if (!confirm('Are you sure you want to delete this conversation? This action cannot be undone.')) {
       return
@@ -264,13 +292,11 @@ export default function Home() {
         throw new Error('Failed to delete conversation')
       }
 
-      // If deleted conversation was current, clear it
       if (currentConversation?.id === conversationId) {
         setCurrentConversation(null)
         setMessages([])
       }
 
-      // Reload conversations list
       if (user) {
         await loadConversations(user.id)
       }
@@ -291,7 +317,6 @@ export default function Home() {
     setIsLoading(true)
 
     try {
-      // Create conversation if none exists
       let conversationId = currentConversation?.id
       if (!conversationId) {
         const response = await fetch('/api/conversations', {
@@ -321,7 +346,6 @@ export default function Home() {
       })
 
       if (!response.ok) {
-        // Try to get error message from response
         let errorMessage = `HTTP error! status: ${response.status}`
         try {
           const errorData = await response.json()
@@ -336,7 +360,6 @@ export default function Home() {
 
       const data = await response.json()
       
-      // Check if response has an error
       if (data.error) {
         throw new Error(data.error)
       }
@@ -349,7 +372,7 @@ export default function Home() {
         ...prev,
         {
           role: 'assistant',
-          content: `❌ Error: ${errorMessage}`,
+          content: `Error: ${errorMessage}`,
         },
       ])
     } finally {
@@ -357,27 +380,38 @@ export default function Home() {
     }
   }
 
+  // ==================== LANDING PAGE (NOT LOGGED IN) ====================
   if (!user) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen mesh-gradient relative">
         {/* Navigation */}
-        <nav className="bg-white border-b border-gray-100 sticky top-0 z-40">
+        <nav className="sticky top-0 z-50 glass">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">AI</span>
+                <div className="w-9 h-9 gradient-bg rounded-xl flex items-center justify-center shadow-glow">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
                 </div>
-                <span className="text-xl font-semibold text-gray-900">
-                  ChatBot Pro
+                <span className="text-xl font-bold text-slate-900 tracking-tight">
+                  ChatBot<span className="gradient-text">Pro</span>
                 </span>
               </div>
-              <button
-                onClick={() => setShowAuth(true)}
-                className="bg-gray-900 text-white px-6 py-2.5 rounded-lg hover:bg-gray-800 transition-colors duration-200 font-medium"
-              >
-                Get Started
-              </button>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => { setShowAuth(true); setAuthMode('signin') }}
+                  className="text-sm font-medium text-slate-600 hover:text-primary-600 px-4 py-2 rounded-xl hover:bg-primary-50/50 transition-all duration-200"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => { setShowAuth(true); setAuthMode('signup') }}
+                  className="gradient-bg text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:shadow-glow transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  Get Started
+                </button>
+              </div>
             </div>
           </div>
         </nav>
@@ -385,117 +419,191 @@ export default function Home() {
         {!showAuth ? (
           <div>
             {/* Hero Section */}
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20">
-              <div className="text-center">
-                <div className="inline-flex items-center bg-gray-50 rounded-full px-4 py-2 mb-8">
-                  <span className="text-sm font-medium text-gray-600">New: Advanced AI Models Available</span>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-32 pb-20 relative">
+              {/* Decorative floating elements */}
+              <div className="absolute top-20 left-10 w-72 h-72 bg-primary-400/10 rounded-full blur-3xl animate-float pointer-events-none"></div>
+              <div className="absolute top-40 right-10 w-96 h-96 bg-accent-400/10 rounded-full blur-3xl animate-float-delayed pointer-events-none"></div>
+              <div className="absolute bottom-0 left-1/2 w-80 h-80 bg-pink-400/8 rounded-full blur-3xl animate-float-slow pointer-events-none"></div>
+
+              <div className="text-center relative z-10">
+                <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-full px-5 py-2.5 mb-8 border border-primary-100 shadow-sm animate-fade-in">
+                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                  <span className="text-sm font-medium text-slate-700">Powered by Advanced AI Models</span>
                 </div>
                 
-                <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-                  Intelligent AI Assistant
+                <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 mb-8 leading-[1.1] tracking-tight animate-slide-up">
+                  Your Intelligent
                   <br />
-                  <span className="text-gray-600">for Modern Teams</span>
+                  <span className="gradient-text-hero">AI Assistant</span>
                 </h1>
                 
-                <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
-                  Experience seamless conversations powered by advanced AI. 
+                <p className="text-lg md:text-xl text-slate-600 mb-12 max-w-2xl mx-auto leading-relaxed animate-fade-in-delay-1">
+                  Experience seamless conversations powered by cutting-edge AI. 
                   Get instant answers, creative solutions, and intelligent assistance 
                   tailored to your needs.
                 </p>
                 
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-20 animate-fade-in-delay-2">
                   <button
                     onClick={() => { setShowAuth(true); setAuthMode('signup') }}
-                    className="bg-gray-900 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-800 transition-colors duration-200 shadow-lg hover:shadow-xl"
+                    className="gradient-bg text-white px-8 py-4 rounded-2xl text-lg font-semibold hover:shadow-glow-lg transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] flex items-center gap-2"
+                  >
+                    Start Free Trial
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </button>
+                  
+                  <div className="flex items-center gap-3 text-slate-500">
+                    <div className="flex -space-x-2">
+                      {['bg-primary-400', 'bg-accent-400', 'bg-pink-400'].map((bg, i) => (
+                        <div key={i} className={`w-8 h-8 ${bg} rounded-full border-2 border-white flex items-center justify-center text-white font-semibold text-xs`}>
+                          {String.fromCharCode(65 + i)}
+                        </div>
+                      ))}
+                    </div>
+                    <span className="text-sm font-medium">Join 10,000+ professionals</span>
+                  </div>
+                </div>
+
+                {/* Chat Preview */}
+                <div className="max-w-2xl mx-auto animate-fade-in-delay-3">
+                  <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-elevated border border-white/50 p-6 md:p-8">
+                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                      <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                      <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                      <span className="text-xs text-slate-400 ml-2 font-medium">ChatBot Pro</span>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex justify-end">
+                        <div className="chat-bubble-user text-white px-5 py-3 max-w-[80%]">
+                          <p className="text-sm">Can you help me write a Python script to analyze data?</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-start">
+                        <div className="chat-bubble-ai px-5 py-3 max-w-[85%]">
+                          <p className="text-sm text-slate-700">Of course! I&apos;d be happy to help. Here&apos;s a clean data analysis script using pandas...</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex gap-3">
+                      <div className="flex-1 bg-slate-50 rounded-xl px-4 py-3 text-sm text-slate-400 border border-slate-100">
+                        Type your message...
+                      </div>
+                      <div className="gradient-bg rounded-xl px-4 py-3 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Features Grid */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+                  Everything you need to <span className="gradient-text">work smarter</span>
+                </h2>
+                <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+                  Powerful features designed to enhance your productivity and streamline your workflow.
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-6">
+                {[
+                  {
+                    icon: (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    ),
+                    title: 'Lightning Fast',
+                    description: 'Get instant responses powered by cutting-edge AI technology with enterprise-grade performance.',
+                    color: 'from-primary-500 to-primary-600',
+                    bgColor: 'bg-primary-50',
+                    iconColor: 'text-primary-600',
+                  },
+                  {
+                    icon: (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    ),
+                    title: 'Enterprise Security',
+                    description: 'Your conversations are encrypted and stored securely with SOC 2 compliance and advanced privacy controls.',
+                    color: 'from-accent-500 to-accent-600',
+                    bgColor: 'bg-accent-50',
+                    iconColor: 'text-accent-600',
+                  },
+                  {
+                    icon: (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    ),
+                    title: 'Smart Memory',
+                    description: 'Access your conversation history with intelligent context awareness and seamless synchronization.',
+                    color: 'from-pink-500 to-pink-600',
+                    bgColor: 'bg-pink-50',
+                    iconColor: 'text-pink-600',
+                  },
+                ].map((feature, i) => (
+                  <div key={i} className="group bg-white/70 backdrop-blur-sm rounded-2xl p-8 border border-white/50 shadow-card card-hover">
+                    <div className={`w-12 h-12 ${feature.bgColor} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                      <svg className={`w-6 h-6 ${feature.iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {feature.icon}
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold mb-3 text-slate-900">{feature.title}</h3>
+                    <p className="text-slate-600 leading-relaxed">{feature.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Stats Section */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+              <div className="gradient-bg rounded-3xl p-12 md:p-16 text-center relative overflow-hidden">
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  <div className="absolute -top-20 -right-20 w-60 h-60 bg-white/10 rounded-full blur-2xl"></div>
+                  <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-white/10 rounded-full blur-2xl"></div>
+                </div>
+                <div className="relative z-10">
+                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                    Trusted by Leading Organizations
+                  </h2>
+                  <p className="text-lg text-primary-100 mb-12 max-w-2xl mx-auto">
+                    Join thousands of professionals who rely on our AI assistant for their daily workflows
+                  </p>
+                  <div className="grid md:grid-cols-3 gap-8 mb-12">
+                    {[
+                      { value: '10,000+', label: 'Active Users' },
+                      { value: '1M+', label: 'Messages Processed' },
+                      { value: '99.9%', label: 'Uptime SLA' },
+                    ].map((stat, i) => (
+                      <div key={i} className="text-center">
+                        <div className="text-4xl font-bold text-white mb-2">{stat.value}</div>
+                        <div className="text-primary-200 font-medium">{stat.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => { setShowAuth(true); setAuthMode('signup') }}
+                    className="bg-white text-primary-600 px-8 py-4 rounded-2xl text-lg font-semibold hover:bg-primary-50 transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] shadow-lg"
                   >
                     Start Free Trial
                   </button>
-                  
-                  <div className="flex items-center gap-3 text-gray-500">
-                    <div className="flex -space-x-2">
-                      <div className="w-8 h-8 bg-gray-200 rounded-full border-2 border-white flex items-center justify-center text-gray-600 font-medium text-sm">A</div>
-                      <div className="w-8 h-8 bg-gray-200 rounded-full border-2 border-white flex items-center justify-center text-gray-600 font-medium text-sm">B</div>
-                      <div className="w-8 h-8 bg-gray-200 rounded-full border-2 border-white flex items-center justify-center text-gray-600 font-medium text-sm">C</div>
-                    </div>
-                    <span className="text-sm">Join 10,000+ professionals</span>
-                  </div>
                 </div>
-              </div>
-
-              {/* Features Grid */}
-              <div className="mt-24 grid md:grid-cols-3 gap-8">
-                <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-6">
-                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-semibold mb-3 text-gray-900">Lightning Fast</h3>
-                  <p className="text-gray-600 leading-relaxed">Get instant responses powered by cutting-edge AI technology with enterprise-grade performance.</p>
-                </div>
-
-                <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-6">
-                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-semibold mb-3 text-gray-900">Enterprise Security</h3>
-                  <p className="text-gray-600 leading-relaxed">Your conversations are encrypted and stored securely with SOC 2 compliance and advanced privacy controls.</p>
-                </div>
-
-                <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-6">
-                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-semibold mb-3 text-gray-900">Smart Memory</h3>
-                  <p className="text-gray-600 leading-relaxed">Access your conversation history with intelligent context awareness and seamless cross-device synchronization.</p>
-                </div>
-              </div>
-
-              {/* Stats Section */}
-              <div className="mt-24 bg-gray-50 rounded-2xl p-16 text-center">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                  Trusted by Leading Organizations
-                </h2>
-                <p className="text-lg text-gray-600 mb-12 max-w-2xl mx-auto">
-                  Join thousands of professionals who rely on our AI assistant for their daily workflows
-                </p>
-                <div className="grid md:grid-cols-3 gap-8 mb-12">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900 mb-2">10,000+</div>
-                    <div className="text-gray-600">Active Users</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900 mb-2">1M+</div>
-                    <div className="text-gray-600">Messages Processed</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900 mb-2">99.9%</div>
-                    <div className="text-gray-600">Uptime SLA</div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => { setShowAuth(true); setAuthMode('signup') }}
-                  className="bg-gray-900 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-800 transition-colors duration-200 shadow-lg hover:shadow-xl"
-                >
-                  Start Free Trial
-                </button>
               </div>
             </div>
 
-            {/* Footer */}
-            <Footer/>
-            </div>
-          ) : (
-          // Auth Modal
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-8 relative">
+            <Footer />
+          </div>
+        ) : (
+          /* ==================== AUTH MODAL ==================== */
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 relative animate-slide-up">
               <button
                 onClick={() => setShowAuth(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-all"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -503,138 +611,193 @@ export default function Home() {
               </button>
 
               <div className="text-center mb-8">
-                <div className="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white font-bold text-lg">AI</span>
+                <div className="w-14 h-14 gradient-bg rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-glow">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
                 </div>
-                <h2 className="text-2xl font-semibold text-gray-900">
-                  {authMode === 'signin' ? 'Welcome Back' : 'Create Account'}
+                <h2 className="text-2xl font-bold text-slate-900">
+                  {authMode === 'signin' ? 'Welcome back' : 'Create your account'}
                 </h2>
-                <p className="text-gray-600 mt-2 text-sm">
-                  {authMode === 'signin' ? 'Sign in to continue' : 'Start your free trial'}
+                <p className="text-slate-500 mt-2 text-sm">
+                  {authMode === 'signin' ? 'Sign in to continue your conversations' : 'Start your free trial today'}
                 </p>
               </div>
 
-            <form onSubmit={handleAuth} className="space-y-4">
-              <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                <input
-                  type="email"
-                  value={authData.email}
-                  onChange={(e) => setAuthData({...authData, email: e.target.value})}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                    placeholder="you@company.com"
-                  required
-                />
-              </div>
-              
-              <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                <input
-                  type="password"
-                  value={authData.password}
-                  onChange={(e) => setAuthData({...authData, password: e.target.value})}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                    placeholder="••••••••"
-                  required
-                />
-              </div>
-
-              {authMode === 'signup' && (
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                  <input
-                    type="text"
-                    value={authData.name}
-                    onChange={(e) => setAuthData({...authData, name: e.target.value})}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              <form onSubmit={handleAuth} className="space-y-4">
+                {authMode === 'signup' && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Full Name</label>
+                    <input
+                      type="text"
+                      value={authData.name}
+                      onChange={(e) => setAuthData({...authData, name: e.target.value})}
+                      className="w-full border border-slate-200 rounded-xl px-4 py-3 focus-ring bg-slate-50/50 text-slate-900 placeholder:text-slate-400"
                       placeholder="John Doe"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+                  <input
+                    type="email"
+                    value={authData.email}
+                    onChange={(e) => setAuthData({...authData, email: e.target.value})}
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 focus-ring bg-slate-50/50 text-slate-900 placeholder:text-slate-400"
+                    placeholder="you@company.com"
+                    required
                   />
                 </div>
-              )}
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
+                  <input
+                    type="password"
+                    value={authData.password}
+                    onChange={(e) => setAuthData({...authData, password: e.target.value})}
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 focus-ring bg-slate-50/50 text-slate-900 placeholder:text-slate-400"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
 
-              <button
-                type="submit"
-                disabled={isLoading}
-                  className="w-full bg-gray-900 text-white py-3 px-4 rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors duration-200"
-                >
-                  {isLoading ? 'Please wait...' : (authMode === 'signin' ? 'Sign In' : 'Create Account')}
-                </button>
-
-                <div className="text-center pt-4">
                 <button
-                  type="button"
-                    onClick={() => setAuthMode(authMode === 'signin' ? 'signup' : 'signin')}
-                    className="text-gray-600 hover:text-gray-900 text-sm font-medium"
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full gradient-bg text-white py-3.5 px-4 rounded-xl hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] mt-2"
                 >
-                    {authMode === 'signin' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+                  {isLoading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Please wait...
+                    </span>
+                  ) : (authMode === 'signin' ? 'Sign In' : 'Create Account')}
                 </button>
-              </div>
-            </form>
+
+                <div className="text-center pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setAuthMode(authMode === 'signin' ? 'signup' : 'signin')}
+                    className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+                  >
+                    {authMode === 'signin' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
-          )}
+        )}
       </div>
     )
   }
 
+  // ==================== CHAT INTERFACE (LOGGED IN) ====================
   return (
-    <div className="h-screen bg-white flex overflow-hidden">
-      {/* Sidebar - Fixed, scrollable, full height */}
-      <div className="w-80 bg-gray-50 border-r border-gray-200 flex flex-col h-full fixed left-0 top-0">
-        <div className="p-6 border-b border-gray-200">
+    <div className="h-screen bg-slate-50 flex overflow-hidden">
+      {/* Sidebar */}
+      <div className={`${sidebarOpen ? 'w-80' : 'w-0'} bg-white border-r border-slate-200/80 flex flex-col h-full fixed left-0 top-0 transition-all duration-300 overflow-hidden z-30`}>
+        {/* Sidebar Header */}
+        <div className="p-5 border-b border-slate-100">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">AI</span>
+              <div className="w-9 h-9 gradient-bg rounded-xl flex items-center justify-center shadow-glow">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
               </div>
-              <h1 className="text-lg font-semibold text-gray-900">ChatBot Pro</h1>
+              <h1 className="text-lg font-bold text-slate-900 tracking-tight">
+                Chat<span className="gradient-text">Bot</span>
+              </h1>
+            </div>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-all"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              </svg>
+            </button>
+          </div>
+          
+          {/* User info */}
+          <div className="flex items-center gap-3 px-3 py-2.5 bg-slate-50 rounded-xl">
+            <div className="w-8 h-8 gradient-bg rounded-lg flex items-center justify-center text-white text-sm font-semibold">
+              {user.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-slate-900 truncate">{user.name}</p>
+              <p className="text-xs text-slate-500 truncate">{user.email}</p>
             </div>
             <button
               onClick={handleSignOut}
-              className="text-sm text-gray-500 hover:text-gray-700 font-medium"
+              className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-all"
+              title="Sign Out"
             >
-              Sign Out
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
             </button>
           </div>
-          <p className="text-sm text-gray-600">Welcome back, {user.name}</p>
         </div>
 
-        <div className="p-6 border-b border-gray-200">
+        {/* New Conversation Button */}
+        <div className="p-4">
           <button
             onClick={startNewConversation}
-            className="w-full bg-gray-900 text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors duration-200 font-medium"
+            className="w-full gradient-bg text-white py-3 px-4 rounded-xl hover:shadow-glow transition-all duration-300 font-medium flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
           >
-            + New Conversation
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            New Conversation
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wider">Recent Conversations</h3>
-          <div className="space-y-2">
+        {/* Conversations List */}
+        <div className="flex-1 overflow-y-auto px-4 pb-4">
+          <h3 className="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-widest px-1">Recent</h3>
+          <div className="space-y-1">
             {conversations.map((conversation) => (
               <div
                 key={conversation.id}
-                className={`group relative w-full text-left p-4 rounded-lg border transition-all duration-200 ${
+                className={`group relative w-full text-left p-3.5 rounded-xl transition-all duration-200 cursor-pointer ${
                   currentConversation?.id === conversation.id
-                    ? 'bg-white border-gray-300 shadow-sm'
-                    : 'bg-transparent border-gray-200 hover:bg-white hover:border-gray-300 hover:shadow-sm'
+                    ? 'bg-primary-50 border border-primary-200/50'
+                    : 'hover:bg-slate-50 border border-transparent'
                 }`}
               >
                 <button
                   onClick={() => loadConversation(conversation.id)}
                   className="w-full text-left"
                 >
-                  <div className="font-medium text-sm text-gray-900 truncate mb-1 pr-8">{conversation.title}</div>
-                  <div className="text-xs text-gray-500">
-                    {new Date(conversation.updated_at).toLocaleDateString()}
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                      currentConversation?.id === conversation.id
+                        ? 'bg-primary-100 text-primary-600'
+                        : 'bg-slate-100 text-slate-500'
+                    }`}>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm text-slate-900 truncate">{conversation.title}</div>
+                      <div className="text-xs text-slate-400 mt-0.5">
+                        {new Date(conversation.updated_at).toLocaleDateString()}
+                      </div>
+                    </div>
                   </div>
                 </button>
                 <button
                   onClick={(e) => deleteConversation(conversation.id, e)}
-                  className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded hover:bg-red-50"
-                  title="Delete conversation"
+                  className="absolute top-2.5 right-2 p-1.5 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all duration-200 rounded-lg hover:bg-red-50"
+                  title="Delete"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 </button>
@@ -645,26 +808,38 @@ export default function Home() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col bg-white ml-80 h-full overflow-hidden">
+      <div className={`flex-1 flex flex-col bg-white h-full overflow-hidden transition-all duration-300 ${sidebarOpen ? 'ml-80' : 'ml-0'}`}>
         {currentConversation ? (
           <>
             {/* Chat Header */}
-            <div className="bg-white border-b border-gray-200 p-6 flex-shrink-0">
+            <div className="bg-white/80 backdrop-blur-sm border-b border-slate-100 px-6 py-4 flex-shrink-0">
               <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-gray-900">{currentConversation.title}</h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {messages.length} messages • {new Date(currentConversation.updated_at).toLocaleDateString()}
-                  </p>
+                <div className="flex items-center gap-3">
+                  {!sidebarOpen && (
+                    <button
+                      onClick={() => setSidebarOpen(true)}
+                      className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-all mr-1"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                      </svg>
+                    </button>
+                  )}
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-900">{currentConversation.title}</h2>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {messages.length} messages &middot; {new Date(currentConversation.updated_at).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                    <span className="text-xs text-gray-500">AI Online</span>
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-full">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-green-700 font-medium">Online</span>
                   </div>
                   <button
                     onClick={() => deleteConversation(currentConversation.id)}
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-200"
                     title="Delete conversation"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -676,30 +851,28 @@ export default function Home() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
+            <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 space-y-6 min-h-0 gradient-bg-subtle">
               {messages.map((message, index) => (
                 <div
                   key={index}
-                  className={`flex ${
-                    message.role === 'user' ? 'justify-end' : 'justify-start'
-                  }`}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
                 >
-                  <div className={`flex max-w-[80%] ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                  <div className={`flex max-w-[75%] ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'} items-end gap-3`}>
                     {/* Avatar */}
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-xs font-semibold ${
                       message.role === 'user' 
-                        ? 'bg-gray-900 text-white ml-3' 
-                        : 'bg-gray-100 text-gray-600 mr-3'
+                        ? 'gradient-bg text-white shadow-glow' 
+                        : 'bg-slate-100 text-slate-600'
                     }`}>
                       {message.role === 'user' ? user.name.charAt(0).toUpperCase() : 'AI'}
                     </div>
                     
                     {/* Message Bubble */}
                     <div
-                      className={`rounded-2xl px-4 py-3 ${
+                      className={`px-5 py-3.5 ${
                         message.role === 'user'
-                          ? 'bg-gray-900 text-white'
-                          : 'bg-gray-50 text-gray-900 border border-gray-200'
+                          ? 'chat-bubble-user text-white'
+                          : 'chat-bubble-ai text-slate-800'
                       }`}
                     >
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
@@ -708,16 +881,16 @@ export default function Home() {
                 </div>
               ))}
               {isLoading && (
-                <div className="flex justify-start">
-                  <div className="flex">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 text-gray-600 mr-3 flex items-center justify-center text-xs font-medium">
+                <div className="flex justify-start animate-fade-in">
+                  <div className="flex items-end gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-xs font-semibold">
                       AI
                     </div>
-                    <div className="bg-gray-50 text-gray-900 border border-gray-200 rounded-2xl px-4 py-3">
-                      <div className="flex items-center space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    <div className="chat-bubble-ai px-5 py-4">
+                      <div className="flex items-center space-x-1.5">
+                        <div className="w-2 h-2 bg-primary-400 rounded-full typing-dot"></div>
+                        <div className="w-2 h-2 bg-primary-400 rounded-full typing-dot"></div>
+                        <div className="w-2 h-2 bg-primary-400 rounded-full typing-dot"></div>
                       </div>
                     </div>
                   </div>
@@ -727,40 +900,55 @@ export default function Home() {
             </div>
 
             {/* Input */}
-            <div className="border-t border-gray-200 p-6 bg-gray-50 flex-shrink-0">
-              <form onSubmit={handleSubmit} className="flex gap-3">
+            <div className="border-t border-slate-100 p-4 md:p-6 bg-white flex-shrink-0">
+              <form onSubmit={handleSubmit} className="flex gap-3 max-w-4xl mx-auto">
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Type your message..."
-                  className="flex-1 border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white"
+                  className="flex-1 border border-slate-200 rounded-xl px-5 py-3.5 focus-ring bg-slate-50/50 text-slate-900 placeholder:text-slate-400"
                   disabled={isLoading}
                 />
                 <button
                   type="submit"
                   disabled={isLoading || !input.trim()}
-                  className="bg-gray-900 text-white px-6 py-3 rounded-xl hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium transition-colors duration-200"
+                  className="gradient-bg text-white px-6 py-3.5 rounded-xl hover:shadow-glow disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2"
                 >
-                  Send
+                  <span className="hidden sm:inline">Send</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
                 </button>
               </form>
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center bg-gray-50">
-            <div className="text-center max-w-md">
-              <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-gray-400">AI</span>
+          <div className="flex-1 flex items-center justify-center gradient-bg-subtle">
+            {!sidebarOpen && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="absolute top-5 left-5 p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-white/80 transition-all z-10"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            )}
+            <div className="text-center max-w-md animate-fade-in">
+              <div className="w-20 h-20 gradient-bg rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-glow animate-float">
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
               </div>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-3">Start a Conversation</h2>
-              <p className="text-gray-600 mb-8 leading-relaxed">
+              <h2 className="text-2xl font-bold text-slate-900 mb-3">Start a Conversation</h2>
+              <p className="text-slate-500 mb-8 leading-relaxed">
                 Begin chatting with your AI assistant. Ask questions, get help with tasks, 
                 or simply have a conversation.
               </p>
               <button
                 onClick={startNewConversation}
-                className="bg-gray-900 text-white py-3 px-8 rounded-xl hover:bg-gray-800 transition-colors duration-200 font-medium"
+                className="gradient-bg text-white py-3.5 px-8 rounded-xl hover:shadow-glow transition-all duration-300 font-semibold hover:scale-[1.03] active:scale-[0.98]"
               >
                 Start New Conversation
               </button>
@@ -771,19 +959,21 @@ export default function Home() {
 
       {/* New Conversation Modal */}
       {showNewConvoModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-8">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 animate-slide-up">
             <div className="text-center mb-6">
-              <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <span className="text-xl font-bold text-gray-600">💬</span>
+              <div className="w-14 h-14 gradient-bg rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-glow">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">New Conversation</h2>
-              <p className="text-gray-600 text-sm">Give your conversation a meaningful title</p>
+              <h2 className="text-xl font-bold text-slate-900 mb-2">New Conversation</h2>
+              <p className="text-slate-500 text-sm">Give your conversation a meaningful title</p>
             </div>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Conversation Title</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Title</label>
                 <input
                   type="text"
                   value={newConvoTitle}
@@ -793,8 +983,8 @@ export default function Home() {
                       createConversationWithTitle()
                     }
                   }}
-                  placeholder="e.g., Project Planning, Code Review, Meeting Notes..."
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  placeholder="e.g., Project Planning, Code Review..."
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus-ring bg-slate-50/50 text-slate-900 placeholder:text-slate-400"
                   autoFocus
                 />
               </div>
@@ -803,16 +993,16 @@ export default function Home() {
                 <button
                   onClick={createConversationWithTitle}
                   disabled={!newConvoTitle.trim()}
-                  className="flex-1 bg-gray-900 text-white py-3 px-4 rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium transition-colors duration-200"
+                  className="flex-1 gradient-bg text-white py-3 px-4 rounded-xl hover:shadow-glow disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-all duration-300"
                 >
-                  Create Conversation
+                  Create
                 </button>
                 <button
                   onClick={() => {
                     setShowNewConvoModal(false)
                     setNewConvoTitle('')
                   }}
-                  className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 font-medium transition-colors duration-200"
+                  className="flex-1 bg-slate-100 text-slate-700 py-3 px-4 rounded-xl hover:bg-slate-200 font-medium transition-all duration-200"
                 >
                   Cancel
                 </button>

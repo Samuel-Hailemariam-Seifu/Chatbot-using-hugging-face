@@ -4,7 +4,8 @@
  */
 
 const hfApiKey = process.env.HF_TOKEN
-const hfModel = process.env.HF_MODEL || 'meta-llama/Llama-3.2-3B-Instruct'
+// Default to a simple, widely available model that works on both endpoints
+const hfModel = process.env.HF_MODEL || 'gpt2'
 
 // Check if token is placeholder or invalid
 const isPlaceholderToken = !hfApiKey || 
@@ -68,11 +69,11 @@ export async function callHuggingFaceAPI(
   const prompt = formatMessagesForLlama(messages)
 
   try {
-    // Try the original inference API endpoint first (most reliable)
-    // If that fails, we can try router endpoint
-    const apiUrl = `https://api-inference.huggingface.co/models/${hfModel}`
-    
-    const response = await fetch(apiUrl, {
+    // Try router endpoint first, fallback to inference API if router fails
+    // Router endpoint: https://router.huggingface.co/models/{model-id}
+    // Inference API: https://api-inference.huggingface.co/models/{model-id}
+    let apiUrl = `https://router.huggingface.co/models/${hfModel}`
+    let response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${hfApiKey}`,
@@ -89,6 +90,29 @@ export async function callHuggingFaceAPI(
         },
       }),
     })
+
+    // If router returns 404, try the original inference API as fallback
+    if (response.status === 404) {
+      console.warn(`Router endpoint returned 404 for ${hfModel}, trying inference API as fallback`)
+      apiUrl = `https://api-inference.huggingface.co/models/${hfModel}`
+      response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${hfApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          inputs: prompt,
+          parameters: {
+            max_new_tokens: max_tokens,
+            temperature: temperature,
+            return_full_text: false,
+            top_p: 0.9,
+            repetition_penalty: 1.1,
+          },
+        }),
+      })
+    }
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -108,9 +132,14 @@ export async function callHuggingFaceAPI(
         errorMessage = 'Model is loading. Please wait 10-30 seconds and try again.'
       }
       
-      // Handle not found - might be model issue
+      // Handle not found - might be model issue or router endpoint issue
       if (response.status === 404) {
-        errorMessage = `Model "${hfModel}" not found or not available. Please check the model name is correct. Try: meta-llama/Llama-3.2-3B-Instruct or google/flan-t5-base`
+        errorMessage = `Model "${hfModel}" not found on router endpoint. This model may not be available on the router. Try changing HF_MODEL in .env.local to: google/flan-t5-base, microsoft/DialoGPT-medium, or facebook/blenderbot-400M-distill`
+      }
+      
+      // Check for deprecation message about router
+      if (errorMessage.includes('router.huggingface.co')) {
+        console.warn('Router endpoint message detected in error')
       }
 
       throw new Error(errorMessage)

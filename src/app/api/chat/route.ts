@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { callHuggingFaceAPI, hfModel } from '@/lib/huggingface'
+import groq from '@/lib/groq'
+import { groqModel } from '@/lib/groq'
 import { supabaseAdmin } from '@/lib/supabase'
 
 interface Message {
@@ -20,14 +21,18 @@ export async function POST(request: NextRequest) {
 
   try {
     // Check for required environment variables
-    const hfToken = process.env.HF_TOKEN
-    const model = hfModel || 'meta-llama/Llama-3.2-3B-Instruct'
+    const groqApiKey = process.env.GROQ_API_KEY
+    const model = groqModel || 'llama-3.1-8b-instant'
 
-    // Check if token is placeholder or invalid
-    if (!hfToken || hfToken === 'your_huggingface_token_here' || !hfToken.startsWith('hf_')) {
+    if (!groqApiKey || groqApiKey === 'your_groq_api_key_here') {
       return NextResponse.json(
         { 
-          error: 'HF_TOKEN is not configured. Please update .env.local with a valid token from https://huggingface.co/settings/tokens. Token should start with "hf_" and restart your dev server.' 
+          error: 'GROQ_API_KEY environment variable is required.\n\n' +
+                 'Quick Setup:\n' +
+                 '1. Get your free API key: https://console.groq.com/keys\n' +
+                 '2. Add to .env.local: GROQ_API_KEY=your_key_here\n' +
+                 '3. Restart your dev server (npm run dev)\n\n' +
+                 'See GROQ_SETUP.md for detailed instructions.'
         },
         { status: 500 }
       )
@@ -52,9 +57,9 @@ export async function POST(request: NextRequest) {
       userSettings = settings
     }
 
-    // Prepare messages for Hugging Face
+    // Prepare messages for Groq
     const systemPrompt = userSettings?.system_prompt || 'You are a helpful, friendly AI assistant.'
-    const hfMessages = [
+    const groqMessages = [
       { role: 'system' as const, content: systemPrompt },
       ...messages.map(msg => ({
         role: msg.role as 'user' | 'assistant',
@@ -62,53 +67,54 @@ export async function POST(request: NextRequest) {
       }))
     ]
 
-    console.log('Hugging Face API Debug:', {
-      hasToken: !!hfToken,
+    console.log('Groq API Debug:', {
+      hasApiKey: !!groqApiKey,
       model: model,
       messageCount: messages.length,
       userId: userId
     })
 
-    // Call Hugging Face API
+    // Call Groq API
     let reply = 'No response generated'
     let usage = null
     let apiError: string | null = null
 
-    try {
-      const result = await callHuggingFaceAPI(hfMessages, {
-        temperature: userSettings?.temperature || 0.7,
-        max_tokens: userSettings?.max_tokens || 1000,
-      })
+    if (groq) {
+      try {
+        const completion = await groq.chat.completions.create({
+          messages: groqMessages,
+          model: model,
+          temperature: userSettings?.temperature || 0.7,
+          max_tokens: userSettings?.max_tokens || 1000,
+          stream: false,
+        })
 
-      reply = result.content || 'No response generated'
-      usage = result.usage
-      
-      // If reply is empty or just whitespace, treat as error
-      if (!reply || reply.trim().length === 0) {
-        apiError = 'Hugging Face API returned empty response'
-        reply = 'No response generated'
+        reply = completion.choices[0]?.message?.content || 'No response generated'
+        usage = completion.usage
+      } catch (groqError) {
+        console.error('Groq API error:', groqError)
+        apiError = groqError instanceof Error ? groqError.message : 'Unknown error from Groq API'
+        // Fall through to fallback response
       }
-    } catch (hfError) {
-      console.error('Hugging Face API error:', hfError)
-      apiError = hfError instanceof Error ? hfError.message : 'Unknown error from Hugging Face API'
-      // Fall through to fallback response
+    } else {
+      apiError = 'Groq client not initialized'
     }
 
-    // Fallback if Hugging Face is not configured or fails
+    // Fallback if Groq is not configured or fails
     if (reply === 'No response generated') {
       const lastMessage = messages[messages.length - 1]
       const userInput = lastMessage?.content || ''
       
       // Show the actual error if available
       if (apiError) {
-        reply = `❌ Error: ${apiError}\n\nPlease check:\n1. Your HF_TOKEN is valid\n2. The model is available\n3. Check server logs for details`
+        reply = `❌ Error: ${apiError}\n\nPlease check:\n1. Your GROQ_API_KEY is valid\n2. The model is available\n3. Check server logs for details`
       } else {
         if (userInput.toLowerCase().includes('hello') || userInput.toLowerCase().includes('hi')) {
-          reply = 'Hello! I\'m a demo chatbot. To use real AI, please configure your Hugging Face token.'
+          reply = 'Hello! I\'m a demo chatbot. To use real AI, please configure your Groq API key.'
         } else if (userInput.toLowerCase().includes('help')) {
-          reply = 'I\'m in demo mode. Please set up your HF_TOKEN in .env.local to use real AI features.'
+          reply = 'I\'m in demo mode. Please set up your GROQ_API_KEY in .env.local to use real AI features.'
         } else {
-          reply = `You said: "${userInput}". I'm in demo mode. Please configure your Hugging Face token for real AI responses.`
+          reply = `You said: "${userInput}". I'm in demo mode. Please configure your Groq API key for real AI responses.`
         }
       }
     }
@@ -182,7 +188,7 @@ export async function POST(request: NextRequest) {
     } else if (userInput.toLowerCase().includes('how are you')) {
       fallbackReply = 'I\'m doing well! The AI service is having issues, but I\'m still working in fallback mode.'
     } else if (userInput.toLowerCase().includes('help')) {
-      fallbackReply = 'I\'m in fallback mode right now. The Hugging Face API seems to be having issues. Please check your HF_TOKEN and try again later.'
+      fallbackReply = 'I\'m in fallback mode right now. The Groq API seems to be having issues. Please check your GROQ_API_KEY and try again later.'
     } else {
       fallbackReply = `You said: "${userInput}". The AI model is currently unavailable, but I received your message! This is a fallback response.`
     }
