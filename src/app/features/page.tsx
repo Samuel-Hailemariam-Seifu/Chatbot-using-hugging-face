@@ -5,127 +5,101 @@ export default function Features() {
   const features = [
     {
       icon: (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
       ),
       title: 'Lightning Fast',
-      description: 'Get instant responses powered by cutting-edge AI technology with enterprise-grade performance and sub-second latency.',
-      bgColor: 'bg-primary-50',
-      iconColor: 'text-primary-600',
+      description: 'Get instant responses powered by Groq\'s LPU technology with sub-second latency on every query.',
     },
     {
       icon: (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
       ),
-      title: 'Enterprise Security',
-      description: 'Your conversations are encrypted and stored securely with SOC 2 compliance and advanced privacy controls.',
-      bgColor: 'bg-accent-50',
-      iconColor: 'text-accent-600',
+      title: 'Secure by Default',
+      description: 'Your conversations are encrypted and stored with Supabase. Row-level security ensures only you see your data.',
     },
     {
       icon: (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
       ),
-      title: 'Smart Memory',
-      description: 'Access your conversation history with intelligent context awareness and seamless cross-device synchronization.',
-      bgColor: 'bg-pink-50',
-      iconColor: 'text-pink-600',
+      title: 'Persistent History',
+      description: 'Every conversation is saved to your account. Pick up right where you left off, on any device.',
     },
     {
       icon: (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
       ),
-      title: 'Advanced Analytics',
-      description: 'Track usage patterns, conversation insights, and performance metrics with detailed analytics dashboard.',
-      bgColor: 'bg-emerald-50',
-      iconColor: 'text-emerald-600',
+      title: 'Usage Analytics',
+      description: 'Track your conversation count, messages, and token usage with a real-time personal dashboard.',
     },
     {
       icon: (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-1.053M18 10.5a3 3 0 11-6 0 3 3 0 016 0zm-9-3a3 3 0 11-6 0 3 3 0 016 0z" />
       ),
-      title: 'Team Collaboration',
-      description: 'Share conversations, collaborate on projects, and manage team access with advanced permission controls.',
-      bgColor: 'bg-amber-50',
-      iconColor: 'text-amber-600',
+      title: 'Multi-User Support',
+      description: 'Each user gets their own secure account, settings, and conversation history with full data isolation.',
     },
     {
       icon: (
         <>
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </>
       ),
-      title: 'Custom Integrations',
-      description: 'Connect with your favorite tools and services through our comprehensive API and webhook system.',
-      bgColor: 'bg-cyan-50',
-      iconColor: 'text-cyan-600',
+      title: 'Customizable Settings',
+      description: 'Adjust the AI model, temperature, max tokens, and system prompt to tailor responses to your needs.',
     },
   ]
 
   return (
-    <div className="min-h-screen mesh-gradient">
+    <div className="min-h-screen bg-white">
       <Header />
 
-      {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 relative">
-        <div className="absolute top-10 right-10 w-72 h-72 bg-primary-400/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute top-40 left-10 w-60 h-60 bg-accent-400/10 rounded-full blur-3xl pointer-events-none"></div>
-        
-        <div className="text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-full px-5 py-2 mb-6 border border-primary-100 shadow-sm">
-            <span className="text-sm font-medium text-primary-600">Explore our capabilities</span>
-          </div>
-          <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 mb-6 leading-tight tracking-tight">
-            Powerful Features for
-            <br />
-            <span className="gradient-text">Modern Teams</span>
+      {/* Hero */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
+        <div className="text-center max-w-2xl mx-auto">
+          <h1 className="text-3xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
+            Built for real work
           </h1>
-          <p className="text-lg md:text-xl text-slate-600 mb-12 max-w-3xl mx-auto leading-relaxed">
-            Discover the comprehensive set of features that make ChatBot Pro the perfect AI assistant for your organization.
+          <p className="text-lg text-slate-500 leading-relaxed">
+            Everything you need to have productive AI conversations, nothing you don&apos;t.
           </p>
         </div>
-      </div>
+      </section>
 
       {/* Features Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           {features.map((feature, i) => (
-            <div key={i} className="group bg-white/70 backdrop-blur-sm rounded-2xl p-8 border border-white/50 shadow-card card-hover">
-              <div className={`w-12 h-12 ${feature.bgColor} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                <svg className={`w-6 h-6 ${feature.iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div key={i} className="p-6 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors group">
+              <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-slate-900 transition-colors">
+                <svg className="w-5 h-5 text-slate-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {feature.icon}
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-slate-900">{feature.title}</h3>
-              <p className="text-slate-600 leading-relaxed">{feature.description}</p>
+              <h3 className="text-base font-semibold text-slate-900 mb-2">{feature.title}</h3>
+              <p className="text-sm text-slate-500 leading-relaxed">{feature.description}</p>
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* CTA Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
-        <div className="gradient-bg rounded-3xl p-12 md:p-16 text-center relative overflow-hidden">
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute -top-20 -right-20 w-60 h-60 bg-white/10 rounded-full blur-2xl"></div>
-            <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-white/10 rounded-full blur-2xl"></div>
-          </div>
-          <div className="relative z-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Ready to Experience These Features?
-            </h2>
-            <p className="text-lg text-primary-100 mb-8 max-w-2xl mx-auto">
-              Start your free trial and discover how ChatBot Pro can transform your workflow.
-            </p>
-            <a
-              href="/"
-              className="inline-block bg-white text-primary-600 px-8 py-4 rounded-2xl text-lg font-semibold hover:bg-primary-50 transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] shadow-lg"
-            >
-              Start Free Trial
-            </a>
-          </div>
+      {/* CTA */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <div className="bg-slate-900 rounded-2xl px-8 py-12 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
+            Ready to try it out?
+          </h2>
+          <p className="text-slate-400 mb-6 max-w-md mx-auto text-sm">
+            Create a free account and start chatting in under 30 seconds.
+          </p>
+          <a
+            href="/"
+            className="inline-block bg-white text-slate-900 px-6 py-3 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors"
+          >
+            Get started free
+          </a>
         </div>
-      </div>
+      </section>
 
       <Footer />
     </div>

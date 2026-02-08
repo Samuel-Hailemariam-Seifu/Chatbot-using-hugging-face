@@ -7,37 +7,33 @@ export default function Pricing() {
       name: 'Free',
       price: '$0',
       period: 'forever',
-      description: 'Perfect for individuals',
+      description: 'Perfect for trying it out',
       features: [
         '100 messages per month',
-        'Basic AI models',
+        'Basic AI model',
         'Conversation history',
         'Email support',
       ],
       cta: 'Get Started Free',
       href: '/',
       popular: false,
-      style: 'bg-white/70 backdrop-blur-sm border border-white/50',
-      btnStyle: 'bg-slate-100 text-slate-900 hover:bg-slate-200',
     },
     {
       name: 'Pro',
       price: '$29',
       period: 'per month',
-      description: 'Best for growing teams',
+      description: 'For professionals and teams',
       features: [
         'Unlimited messages',
         'Advanced AI models',
         'Team collaboration',
         'Priority support',
         'API access',
-        'Custom integrations',
+        'Custom system prompts',
       ],
       cta: 'Start Pro Trial',
       href: '/',
       popular: true,
-      style: 'bg-white border-2 border-primary-200 shadow-glow',
-      btnStyle: 'gradient-bg text-white hover:shadow-glow',
     },
     {
       name: 'Enterprise',
@@ -55,19 +51,17 @@ export default function Pricing() {
       cta: 'Contact Sales',
       href: '/contact',
       popular: false,
-      style: 'bg-white/70 backdrop-blur-sm border border-white/50',
-      btnStyle: 'bg-slate-100 text-slate-900 hover:bg-slate-200',
     },
   ]
 
   const faqs = [
     {
       q: 'Can I change plans anytime?',
-      a: 'Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately and billing is prorated.',
+      a: 'Yes, you can upgrade or downgrade at any time. Changes take effect immediately and billing is prorated.',
     },
     {
       q: 'Is there a free trial?',
-      a: 'Yes, all paid plans come with a 14-day free trial. No credit card required to get started.',
+      a: 'All paid plans come with a 14-day free trial. No credit card required to get started.',
     },
     {
       q: 'What payment methods do you accept?',
@@ -75,95 +69,94 @@ export default function Pricing() {
     },
     {
       q: 'Can I cancel at any time?',
-      a: 'Absolutely. You can cancel your subscription at any time with no cancellation fees.',
+      a: 'Yes. You can cancel your subscription at any time with no cancellation fees.',
     },
   ]
 
   return (
-    <div className="min-h-screen mesh-gradient">
+    <div className="min-h-screen bg-white">
       <Header />
 
-      {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 relative">
-        <div className="absolute top-10 left-20 w-72 h-72 bg-primary-400/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute top-40 right-20 w-60 h-60 bg-accent-400/10 rounded-full blur-3xl pointer-events-none"></div>
-
-        <div className="text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-full px-5 py-2 mb-6 border border-primary-100 shadow-sm">
-            <span className="text-sm font-medium text-primary-600">Simple & transparent</span>
-          </div>
-          <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 mb-6 leading-tight tracking-tight">
-            Plans that <span className="gradient-text">scale with you</span>
+      {/* Hero */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
+        <div className="text-center max-w-2xl mx-auto">
+          <h1 className="text-3xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
+            Simple, transparent pricing
           </h1>
-          <p className="text-lg md:text-xl text-slate-600 mb-12 max-w-3xl mx-auto leading-relaxed">
-            Choose the perfect plan for your team. All plans include our core AI features with no hidden fees.
+          <p className="text-lg text-slate-500">
+            Choose the plan that fits your needs. No hidden fees, cancel anytime.
           </p>
         </div>
-      </div>
+      </section>
 
       {/* Pricing Cards */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
-        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 items-start">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <div className="grid md:grid-cols-3 gap-5 items-start">
           {plans.map((plan, i) => (
             <div
               key={i}
-              className={`rounded-3xl p-8 relative card-hover ${plan.style} ${plan.popular ? 'md:-mt-4 md:pb-10' : ''}`}
+              className={`rounded-xl p-6 relative ${
+                plan.popular
+                  ? 'border-2 border-slate-900 md:-mt-2 md:pb-8'
+                  : 'border border-slate-200'
+              }`}
             >
               {plan.popular && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="gradient-bg text-white px-5 py-1.5 rounded-full text-sm font-semibold shadow-glow">
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-slate-900 text-white px-3 py-1 rounded-full text-xs font-medium">
                     Most Popular
                   </span>
                 </div>
               )}
-              <div className="text-center mb-8">
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">{plan.name}</h3>
+              <div className="text-center mb-6">
+                <h3 className="text-sm font-semibold text-slate-900 mb-3">{plan.name}</h3>
                 <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-5xl font-extrabold text-slate-900">{plan.price}</span>
+                  <span className="text-4xl font-bold text-slate-900">{plan.price}</span>
                   {plan.period !== 'forever' && plan.period !== 'contact us' && (
-                    <span className="text-slate-500 text-sm ml-1">/{plan.period.replace('per ', '')}</span>
+                    <span className="text-slate-400 text-sm">/{plan.period.replace('per ', '')}</span>
                   )}
                 </div>
-                <p className="text-slate-500 text-sm mt-2">{plan.description}</p>
+                <p className="text-slate-500 text-sm mt-1.5">{plan.description}</p>
               </div>
-              <ul className="space-y-4 mb-8">
+              <ul className="space-y-3 mb-6">
                 {plan.features.map((feature, j) => (
-                  <li key={j} className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                      <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <span className="text-slate-600 text-sm">{feature}</span>
+                  <li key={j} className="flex items-center gap-2.5">
+                    <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-sm text-slate-600">{feature}</span>
                   </li>
                 ))}
               </ul>
               <a
                 href={plan.href}
-                className={`w-full py-3.5 px-4 rounded-xl font-semibold text-center block transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${plan.btnStyle}`}
+                className={`w-full py-2.5 px-4 rounded-lg font-medium text-sm text-center block transition-colors ${
+                  plan.popular
+                    ? 'bg-slate-900 text-white hover:bg-slate-800'
+                    : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+                }`}
               >
                 {plan.cta}
               </a>
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* FAQ Section */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
-        <h2 className="text-3xl font-bold text-slate-900 text-center mb-4">
-          Frequently Asked <span className="gradient-text">Questions</span>
+      {/* FAQ */}
+      <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <h2 className="text-2xl font-bold text-slate-900 text-center mb-8">
+          Frequently asked questions
         </h2>
-        <p className="text-slate-600 text-center mb-12">Everything you need to know about our plans.</p>
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-5">
           {faqs.map((faq, i) => (
-            <div key={i} className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-white/50 shadow-card">
-              <h3 className="text-base font-semibold text-slate-900 mb-2">{faq.q}</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">{faq.a}</p>
+            <div key={i} className="p-5 rounded-xl border border-slate-100">
+              <h3 className="text-sm font-semibold text-slate-900 mb-1.5">{faq.q}</h3>
+              <p className="text-sm text-slate-500 leading-relaxed">{faq.a}</p>
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
       <Footer />
     </div>
