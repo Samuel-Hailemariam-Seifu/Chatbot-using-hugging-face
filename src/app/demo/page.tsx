@@ -12,7 +12,7 @@ export default function DemoPage() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: "Hi! I'm the demo chatbot. This version works without any external APIs — perfect for testing! Try saying hello.",
+      content: "Hi! I'm the demo chatbot. This works without any external APIs — perfect for testing. Try saying hello!",
     },
   ])
   const [input, setInput] = useState('')
@@ -39,9 +39,7 @@ export default function DemoPage() {
     try {
       const response = await fetch('/api/chat-demo', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: [...messages, userMessage] }),
       })
 
@@ -57,7 +55,7 @@ export default function DemoPage() {
         ...prev,
         {
           role: 'assistant',
-          content: `Error: ${error instanceof Error ? error.message : 'Sorry, I encountered an error.'}`,
+          content: `Error: ${error instanceof Error ? error.message : 'Something went wrong.'}`,
         },
       ])
     } finally {
@@ -66,31 +64,29 @@ export default function DemoPage() {
   }
 
   return (
-    <div className="min-h-screen mesh-gradient flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <header className="glass sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 gradient-bg rounded-xl flex items-center justify-center shadow-glow">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+      <header className="bg-white border-b border-slate-100 sticky top-0 z-50">
+        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
               </svg>
             </div>
             <div>
-              <h1 className="text-lg font-bold text-slate-900 tracking-tight">
-                Demo <span className="gradient-text">Chatbot</span>
-              </h1>
-              <p className="text-xs text-slate-500">No API keys required</p>
+              <h1 className="text-sm font-semibold text-slate-900">Demo Chatbot</h1>
+              <p className="text-[11px] text-slate-400">No API keys required</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-full">
-              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-              <span className="text-xs text-emerald-700 font-medium">Demo Mode</span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 rounded-md">
+              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+              <span className="text-[11px] text-emerald-700 font-medium">Demo Mode</span>
             </div>
             <Link
               href="/"
-              className="gradient-bg text-white px-4 py-2 rounded-xl text-sm font-semibold hover:shadow-glow transition-all duration-300 hover:scale-[1.02]"
+              className="bg-slate-900 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-slate-800 transition-colors"
             >
               Full Version
             </Link>
@@ -98,58 +94,47 @@ export default function DemoPage() {
         </div>
       </header>
 
-      {/* Chat Container */}
-      <div className="flex-1 max-w-4xl mx-auto w-full px-4 py-6">
-        <div className="bg-white/70 backdrop-blur-sm rounded-3xl border border-white/50 shadow-elevated h-[600px] flex flex-col overflow-hidden">
-          {/* Chat Header */}
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
-            <div className="w-8 h-8 gradient-bg rounded-xl flex items-center justify-center text-white text-xs font-semibold">
-              AI
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-900">Demo Assistant</p>
-              <p className="text-xs text-slate-400">Always online</p>
-            </div>
-          </div>
-
+      {/* Chat */}
+      <div className="flex-1 max-w-3xl mx-auto w-full px-4 py-4 flex flex-col">
+        <div className="flex-1 border border-slate-200 rounded-xl flex flex-col overflow-hidden bg-white" style={{minHeight: '500px'}}>
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-5 gradient-bg-subtle">
+          <div className="flex-1 overflow-y-auto p-5 space-y-4">
             {messages.map((message, index) => (
               <div
                 key={index}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div className={`flex max-w-[80%] ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'} items-end gap-3`}>
-                  <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-semibold ${
+                <div className={`flex max-w-[75%] ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'} items-start gap-2.5`}>
+                  <div className={`flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-[11px] font-medium ${
                     message.role === 'user'
-                      ? 'gradient-bg text-white'
+                      ? 'bg-slate-900 text-white'
                       : 'bg-slate-100 text-slate-600'
                   }`}>
                     {message.role === 'user' ? 'U' : 'AI'}
                   </div>
                   <div
-                    className={`px-4 py-3 ${
+                    className={`px-4 py-2.5 text-sm leading-relaxed ${
                       message.role === 'user'
-                        ? 'chat-bubble-user text-white'
-                        : 'chat-bubble-ai text-slate-800'
+                        ? 'bg-slate-900 text-white rounded-2xl rounded-br-md'
+                        : 'bg-slate-50 border border-slate-100 text-slate-700 rounded-2xl rounded-bl-md'
                     }`}
                   >
-                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                    <p className="whitespace-pre-wrap">{message.content}</p>
                   </div>
                 </div>
               </div>
             ))}
             {isLoading && (
-              <div className="flex justify-start animate-fade-in">
-                <div className="flex items-end gap-3">
-                  <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-xs font-semibold">
+              <div className="flex justify-start">
+                <div className="flex items-start gap-2.5">
+                  <div className="flex-shrink-0 w-7 h-7 rounded-md bg-slate-100 text-slate-600 flex items-center justify-center text-[11px] font-medium">
                     AI
                   </div>
-                  <div className="chat-bubble-ai px-4 py-3">
+                  <div className="bg-slate-50 border border-slate-100 rounded-2xl rounded-bl-md px-4 py-3">
                     <div className="flex items-center space-x-1.5">
-                      <div className="w-2 h-2 bg-primary-400 rounded-full typing-dot"></div>
-                      <div className="w-2 h-2 bg-primary-400 rounded-full typing-dot"></div>
-                      <div className="w-2 h-2 bg-primary-400 rounded-full typing-dot"></div>
+                      <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                      <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                      <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
                     </div>
                   </div>
                 </div>
@@ -158,25 +143,25 @@ export default function DemoPage() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Form */}
+          {/* Input */}
           <div className="border-t border-slate-100 p-4 bg-white">
-            <form onSubmit={handleSubmit} className="flex gap-3">
+            <form onSubmit={handleSubmit} className="flex gap-2">
               <input
                 type="text"
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 placeholder="Type your message..."
-                className="flex-1 border border-slate-200 rounded-xl px-4 py-3 focus-ring bg-slate-50/50 text-slate-900 placeholder:text-slate-400"
+                className="flex-1 border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent bg-white text-slate-900 placeholder:text-slate-400"
                 disabled={isLoading}
               />
               <button
                 type="submit"
                 disabled={isLoading || !input.trim()}
-                className="gradient-bg text-white px-5 py-3 rounded-xl hover:shadow-glow disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2"
+                className="bg-slate-900 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
               >
-                <span>Send</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                Send
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </button>
             </form>
@@ -185,10 +170,10 @@ export default function DemoPage() {
       </div>
 
       {/* Footer */}
-      <footer className="glass border-t border-slate-100">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <p className="text-xs text-slate-500 text-center">
-            Demo Mode — No external APIs required. Try: &quot;Hello&quot;, &quot;How are you?&quot;, &quot;What&apos;s your name?&quot;
+      <footer className="border-t border-slate-100 bg-white">
+        <div className="max-w-3xl mx-auto px-4 py-3">
+          <p className="text-xs text-slate-400 text-center">
+            Demo Mode — No API keys required. Try: &quot;Hello&quot;, &quot;How are you?&quot;, &quot;What can you do?&quot;
           </p>
         </div>
       </footer>
