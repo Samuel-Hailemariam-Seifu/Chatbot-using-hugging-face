@@ -208,6 +208,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Vercel](https://vercel.com) for seamless deployment
 - [TailwindCSS](https://tailwindcss.com) for beautiful styling
 
----
-
-**Made with ❤️ for the open-source community**
