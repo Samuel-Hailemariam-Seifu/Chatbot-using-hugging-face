@@ -2,80 +2,79 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import Logo from './Logo'
+
+const navItems = [
+  { href: '/', label: 'Home' },
+  { href: '/features', label: 'Features' },
+  { href: '/pricing', label: 'Pricing' },
+  { href: '/security', label: 'Security' },
+  { href: '/contact', label: 'Contact' },
+]
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const pathname = usePathname()
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20)
-    }
-    window.addEventListener('scroll', handleScroll)
+    const handleScroll = () => setScrolled(window.scrollY > 8)
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [pathname])
+
   return (
-    <header className={`sticky top-0 z-50 transition-all duration-200 ${
-      scrolled
-        ? 'bg-white/80 backdrop-blur-xl shadow-sm border-b border-slate-100'
-        : 'bg-white border-b border-slate-100'
-    }`}>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-14">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-              </svg>
-            </div>
-            <span className="text-lg font-semibold text-slate-900 tracking-tight">
-              ChatBot Pro
-            </span>
+    <header
+      className={`sticky top-0 z-50 border-b bg-white/85 backdrop-blur-xl transition-colors ${
+        scrolled ? 'border-slate-200' : 'border-transparent'
+      }`}
+    >
+      <div className="container-page">
+        <div className="flex h-14 items-center justify-between">
+          <Link href="/" className="rounded-lg" aria-label="ChatBot Pro home">
+            <Logo />
           </Link>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center space-x-1">
-            {[
-              { href: '/', label: 'Home' },
-              { href: '/features', label: 'Features' },
-              { href: '/pricing', label: 'Pricing' },
-              { href: '/security', label: 'Security' },
-              { href: '/contact', label: 'Contact' },
-            ].map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-md hover:bg-slate-50 transition-colors"
-              >
-                {item.label}
-              </Link>
-            ))}
+          <nav className="hidden items-center gap-1 md:flex">
+            {navItems.map((item) => {
+              const active = pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? 'page' : undefined}
+                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                    active ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              )
+            })}
           </nav>
 
-          {/* CTA */}
-          <div className="hidden md:flex items-center space-x-2">
-            <Link
-              href="/demo"
-              className="text-sm font-medium text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-md hover:bg-slate-50 transition-colors"
-            >
-              Try Demo
+          <div className="hidden items-center gap-2 md:flex">
+            <Link href="/demo" className="btn btn-sm btn-ghost">
+              Try demo
             </Link>
-            <Link
-              href="/"
-              className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors"
-            >
-              Get Started
+            <Link href="/" className="btn btn-sm btn-primary">
+              Get started
             </Link>
           </div>
 
-          {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
+            className="icon-btn md:hidden"
+            aria-expanded={mobileMenuOpen}
+            aria-label="Toggle navigation menu"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               {mobileMenuOpen ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               ) : (
@@ -85,33 +84,24 @@ const Header = () => {
           </button>
         </div>
 
-        {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden pb-4 border-t border-slate-100 mt-2 pt-3">
-            <nav className="flex flex-col space-y-0.5">
-              {[
-                { href: '/', label: 'Home' },
-                { href: '/features', label: 'Features' },
-                { href: '/pricing', label: 'Pricing' },
-                { href: '/security', label: 'Security' },
-                { href: '/contact', label: 'Contact' },
-                { href: '/demo', label: 'Try Demo' },
-              ].map((item) => (
+          <div className="animate-fade-in border-t border-slate-100 py-3 md:hidden">
+            <nav className="flex flex-col gap-0.5">
+              {[...navItems, { href: '/demo', label: 'Try demo' }].map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="px-3 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-50 transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
+                  className={`rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                    pathname === item.href
+                      ? 'bg-slate-100 text-slate-900'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
                 >
                   {item.label}
                 </Link>
               ))}
-              <Link
-                href="/"
-                className="bg-slate-900 text-white px-3 py-2.5 rounded-lg text-sm font-medium text-center mt-2 hover:bg-slate-800 transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Get Started
+              <Link href="/" className="btn btn-primary mt-2">
+                Get started
               </Link>
             </nav>
           </div>

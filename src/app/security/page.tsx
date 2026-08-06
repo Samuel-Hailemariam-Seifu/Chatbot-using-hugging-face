@@ -59,49 +59,51 @@ export default function Security() {
       <Header />
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
-        <div className="text-center max-w-2xl mx-auto">
-          <h1 className="text-3xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
+      <section className="container-page pb-12 pt-16">
+        <div className="mx-auto max-w-2xl text-center">
+          <h1 className="mb-4 text-3xl font-bold tracking-tight text-slate-900 md:text-5xl">
             Security you can trust
           </h1>
-          <p className="text-lg text-slate-500 leading-relaxed">
+          <p className="text-lg leading-relaxed text-slate-500">
             Your data is encrypted, isolated, and protected by industry-standard security measures.
           </p>
         </div>
       </section>
 
       {/* Security Features */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <section className="container-page pb-20">
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {securityFeatures.map((feature, i) => (
-            <div key={i} className="p-6 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors group">
-              <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-slate-900 transition-colors">
-                <svg className="w-5 h-5 text-slate-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div key={i} className="card-interactive group p-6">
+              <div className="icon-tile mb-4 transition-colors group-hover:bg-slate-900 group-hover:text-white">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   {feature.icon}
                 </svg>
               </div>
-              <h3 className="text-base font-semibold text-slate-900 mb-2">{feature.title}</h3>
-              <p className="text-sm text-slate-500 leading-relaxed">{feature.description}</p>
+              <h3 className="mb-2 text-base font-semibold text-slate-900">{feature.title}</h3>
+              <p className="text-sm leading-relaxed text-slate-500">{feature.description}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Compliance */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <div className="bg-slate-900 rounded-2xl px-8 py-12">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Compliance & Certifications</h2>
-            <p className="text-slate-400 text-sm">Meeting the highest standards for data protection</p>
+      <section className="container-page pb-20">
+        <div className="rounded-2xl bg-slate-900 px-8 py-12">
+          <div className="mb-10 text-center">
+            <h2 className="mb-2 text-2xl font-bold tracking-tight text-white md:text-3xl">
+              Compliance &amp; certifications
+            </h2>
+            <p className="text-sm text-slate-400">Meeting the highest standards for data protection</p>
           </div>
-          
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {certifications.map((cert, i) => (
-              <div key={i} className="text-center bg-white/5 rounded-xl p-5 border border-white/10">
-                <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center mx-auto mb-3">
+              <div key={i} className="rounded-xl border border-white/10 bg-white/5 p-5 text-center">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-white/10">
                   <span className="text-sm font-bold text-white">{cert.label}</span>
                 </div>
-                <h3 className="text-sm font-semibold text-white mb-1">{cert.name}</h3>
+                <h3 className="mb-1 text-sm font-semibold text-white">{cert.name}</h3>
                 <p className="text-xs text-slate-400">{cert.description}</p>
               </div>
             ))}

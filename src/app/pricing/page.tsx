@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 
@@ -78,9 +79,9 @@ export default function Pricing() {
       <Header />
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
-        <div className="text-center max-w-2xl mx-auto">
-          <h1 className="text-3xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
+      <section className="container-page pb-12 pt-16">
+        <div className="mx-auto max-w-2xl text-center">
+          <h1 className="mb-4 text-3xl font-bold tracking-tight text-slate-900 md:text-5xl">
             Simple, transparent pricing
           </h1>
           <p className="text-lg text-slate-500">
@@ -90,69 +91,60 @@ export default function Pricing() {
       </section>
 
       {/* Pricing Cards */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <div className="grid md:grid-cols-3 gap-5 items-start">
+      <section className="container-page mx-auto max-w-5xl pb-20">
+        <div className="grid items-start gap-5 md:grid-cols-3">
           {plans.map((plan, i) => (
             <div
               key={i}
-              className={`rounded-xl p-6 relative ${
-                plan.popular
-                  ? 'border-2 border-slate-900 md:-mt-2 md:pb-8'
-                  : 'border border-slate-200'
+              className={`relative rounded-xl p-6 ${
+                plan.popular ? 'border-2 border-slate-900 shadow-elevated md:-mt-2 md:pb-8' : 'border border-slate-200'
               }`}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-slate-900 text-white px-3 py-1 rounded-full text-xs font-medium">
-                    Most Popular
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white">
+                    Most popular
                   </span>
                 </div>
               )}
-              <div className="text-center mb-6">
-                <h3 className="text-sm font-semibold text-slate-900 mb-3">{plan.name}</h3>
+              <div className="mb-6 text-center">
+                <h3 className="mb-3 text-sm font-semibold text-slate-900">{plan.name}</h3>
                 <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-4xl font-bold text-slate-900">{plan.price}</span>
+                  <span className="text-4xl font-bold tracking-tight text-slate-900">{plan.price}</span>
                   {plan.period !== 'forever' && plan.period !== 'contact us' && (
-                    <span className="text-slate-400 text-sm">/{plan.period.replace('per ', '')}</span>
+                    <span className="text-sm text-slate-400">/{plan.period.replace('per ', '')}</span>
                   )}
                 </div>
-                <p className="text-slate-500 text-sm mt-1.5">{plan.description}</p>
+                <p className="mt-1.5 text-sm text-slate-500">{plan.description}</p>
               </div>
-              <ul className="space-y-3 mb-6">
+              <ul className="mb-6 space-y-3">
                 {plan.features.map((feature, j) => (
                   <li key={j} className="flex items-center gap-2.5">
-                    <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-4 w-4 flex-shrink-0 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span className="text-sm text-slate-600">{feature}</span>
                   </li>
                 ))}
               </ul>
-              <a
-                href={plan.href}
-                className={`w-full py-2.5 px-4 rounded-lg font-medium text-sm text-center block transition-colors ${
-                  plan.popular
-                    ? 'bg-slate-900 text-white hover:bg-slate-800'
-                    : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
-                }`}
-              >
+              <Link href={plan.href} className={`btn w-full ${plan.popular ? 'btn-primary' : 'btn-secondary'}`}>
                 {plan.cta}
-              </a>
+              </Link>
             </div>
           ))}
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <h2 className="text-2xl font-bold text-slate-900 text-center mb-8">
+      <section className="container-page mx-auto max-w-3xl pb-20">
+        <h2 className="mb-8 text-center text-2xl font-bold tracking-tight text-slate-900">
           Frequently asked questions
         </h2>
-        <div className="grid md:grid-cols-2 gap-5">
+        <div className="grid gap-5 md:grid-cols-2">
           {faqs.map((faq, i) => (
-            <div key={i} className="p-5 rounded-xl border border-slate-100">
-              <h3 className="text-sm font-semibold text-slate-900 mb-1.5">{faq.q}</h3>
-              <p className="text-sm text-slate-500 leading-relaxed">{faq.a}</p>
+            <div key={i} className="rounded-xl border border-slate-200 p-5">
+              <h3 className="mb-1.5 text-sm font-semibold text-slate-900">{faq.q}</h3>
+              <p className="text-sm leading-relaxed text-slate-500">{faq.a}</p>
             </div>
           ))}
         </div>

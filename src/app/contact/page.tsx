@@ -7,85 +7,74 @@ export default function Contact() {
       <Header />
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
-        <div className="text-center max-w-2xl mx-auto">
-          <h1 className="text-3xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
-            Get in touch
-          </h1>
-          <p className="text-lg text-slate-500 leading-relaxed">
+      <section className="container-page pb-12 pt-16">
+        <div className="mx-auto max-w-2xl text-center">
+          <h1 className="mb-4 text-3xl font-bold tracking-tight text-slate-900 md:text-5xl">Get in touch</h1>
+          <p className="text-lg leading-relaxed text-slate-500">
             Have questions? We&apos;re here to help. Reach out for support, sales, or partnerships.
           </p>
         </div>
       </section>
 
       {/* Contact Form + Info */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <div className="grid md:grid-cols-5 gap-6">
+      <section className="container-page mx-auto max-w-4xl pb-20">
+        <div className="grid gap-6 md:grid-cols-5">
           {/* Form */}
-          <div className="md:col-span-3 p-6 rounded-xl border border-slate-200">
-            <h2 className="text-lg font-semibold text-slate-900 mb-5">Send us a message</h2>
+          <div className="card p-6 md:col-span-3">
+            <h2 className="mb-5 text-lg font-semibold tracking-tight text-slate-900">Send us a message</h2>
             <form className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">First Name</label>
-                  <input
-                    type="text"
-                    className="w-full border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent bg-white text-slate-900 placeholder:text-slate-400"
-                    placeholder="John"
-                  />
+                  <label className="label" htmlFor="contact-first-name">
+                    First name
+                  </label>
+                  <input id="contact-first-name" type="text" className="input" placeholder="John" autoComplete="given-name" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Last Name</label>
-                  <input
-                    type="text"
-                    className="w-full border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent bg-white text-slate-900 placeholder:text-slate-400"
-                    placeholder="Doe"
-                  />
+                  <label className="label" htmlFor="contact-last-name">
+                    Last name
+                  </label>
+                  <input id="contact-last-name" type="text" className="input" placeholder="Doe" autoComplete="family-name" />
                 </div>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                <input
-                  type="email"
-                  className="w-full border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent bg-white text-slate-900 placeholder:text-slate-400"
-                  placeholder="john@example.com"
-                />
+                <label className="label" htmlFor="contact-email">
+                  Email
+                </label>
+                <input id="contact-email" type="email" className="input" placeholder="john@example.com" autoComplete="email" />
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Subject</label>
-                <select className="w-full border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent bg-white text-slate-900">
-                  <option>General Inquiry</option>
-                  <option>Sales Question</option>
-                  <option>Technical Support</option>
+                <label className="label" htmlFor="contact-subject">
+                  Subject
+                </label>
+                <select id="contact-subject" className="input">
+                  <option>General inquiry</option>
+                  <option>Sales question</option>
+                  <option>Technical support</option>
                   <option>Partnership</option>
                   <option>Other</option>
                 </select>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Message</label>
-                <textarea
-                  rows={4}
-                  className="w-full border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent bg-white text-slate-900 placeholder:text-slate-400 resize-none"
-                  placeholder="How can we help?"
-                ></textarea>
+                <label className="label" htmlFor="contact-message">
+                  Message
+                </label>
+                <textarea id="contact-message" rows={4} className="input resize-none" placeholder="How can we help?" />
               </div>
-              
-              <button
-                type="submit"
-                className="w-full bg-slate-900 text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors"
-              >
-                Send Message
+
+              <button type="submit" className="btn btn-primary w-full">
+                Send message
               </button>
             </form>
           </div>
-          
+
           {/* Contact Info */}
-          <div className="md:col-span-2 space-y-4">
-            <div className="p-6 rounded-xl border border-slate-200">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Contact Info</h2>
+          <div className="space-y-4 md:col-span-2">
+            <div className="card p-6">
+              <h2 className="mb-4 text-lg font-semibold tracking-tight text-slate-900">Contact info</h2>
               <div className="space-y-5">
                 {[
                   {
@@ -107,24 +96,26 @@ export default function Contact() {
                   },
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-3">
-                    <div className="w-9 h-9 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="icon-tile h-9 w-9 flex-shrink-0">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         {item.icon}
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium text-slate-900 mb-0.5">{item.title}</h3>
+                      <h3 className="mb-0.5 text-sm font-medium text-slate-900">{item.title}</h3>
                       {item.lines.map((line, j) => (
-                        <p key={j} className="text-sm text-slate-500">{line}</p>
+                        <p key={j} className="text-sm text-slate-500">
+                          {line}
+                        </p>
                       ))}
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-            
-            <div className="p-6 rounded-xl border border-slate-200">
-              <h3 className="text-sm font-semibold text-slate-900 mb-3">Response Times</h3>
+
+            <div className="card p-6">
+              <h3 className="mb-3 text-sm font-semibold text-slate-900">Response times</h3>
               <div className="space-y-2.5">
                 {[
                   { label: 'General inquiries', time: '24 hours' },
@@ -132,9 +123,9 @@ export default function Contact() {
                   { label: 'Sales questions', time: '2 hours' },
                   { label: 'Enterprise support', time: '1 hour' },
                 ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between">
+                  <div key={i} className="flex items-center justify-between gap-3">
                     <span className="text-sm text-slate-500">{item.label}</span>
-                    <span className="text-xs font-medium text-slate-900 bg-slate-100 px-2 py-0.5 rounded">{item.time}</span>
+                    <span className="badge badge-neutral">{item.time}</span>
                   </div>
                 ))}
               </div>

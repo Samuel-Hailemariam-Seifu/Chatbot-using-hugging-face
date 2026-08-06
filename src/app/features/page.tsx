@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 
@@ -55,49 +56,42 @@ export default function Features() {
       <Header />
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
-        <div className="text-center max-w-2xl mx-auto">
-          <h1 className="text-3xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
-            Built for real work
-          </h1>
-          <p className="text-lg text-slate-500 leading-relaxed">
+      <section className="container-page pb-12 pt-16">
+        <div className="mx-auto max-w-2xl text-center">
+          <h1 className="mb-4 text-3xl font-bold tracking-tight text-slate-900 md:text-5xl">Built for real work</h1>
+          <p className="text-lg leading-relaxed text-slate-500">
             Everything you need to have productive AI conversations, nothing you don&apos;t.
           </p>
         </div>
       </section>
 
       {/* Features Grid */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <section className="container-page pb-20">
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {features.map((feature, i) => (
-            <div key={i} className="p-6 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors group">
-              <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-slate-900 transition-colors">
-                <svg className="w-5 h-5 text-slate-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div key={i} className="card-interactive group p-6">
+              <div className="icon-tile mb-4 transition-colors group-hover:bg-slate-900 group-hover:text-white">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   {feature.icon}
                 </svg>
               </div>
-              <h3 className="text-base font-semibold text-slate-900 mb-2">{feature.title}</h3>
-              <p className="text-sm text-slate-500 leading-relaxed">{feature.description}</p>
+              <h3 className="mb-2 text-base font-semibold text-slate-900">{feature.title}</h3>
+              <p className="text-sm leading-relaxed text-slate-500">{feature.description}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* CTA */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <div className="bg-slate-900 rounded-2xl px-8 py-12 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
-            Ready to try it out?
-          </h2>
-          <p className="text-slate-400 mb-6 max-w-md mx-auto text-sm">
+      <section className="container-page pb-20">
+        <div className="rounded-2xl bg-slate-900 px-8 py-12 text-center">
+          <h2 className="mb-3 text-2xl font-bold tracking-tight text-white md:text-3xl">Ready to try it out?</h2>
+          <p className="mx-auto mb-6 max-w-md text-sm text-slate-400">
             Create a free account and start chatting in under 30 seconds.
           </p>
-          <a
-            href="/"
-            className="inline-block bg-white text-slate-900 px-6 py-3 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors"
-          >
+          <Link href="/" className="btn btn-invert px-6 py-3">
             Get started free
-          </a>
+          </Link>
         </div>
       </section>
 

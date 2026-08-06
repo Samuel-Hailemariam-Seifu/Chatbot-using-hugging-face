@@ -1,24 +1,67 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import Header from '@/components/Header'
+import Footer from '@/components/Footer'
+
+interface EnvCheck {
+  environment?: {
+    NEXT_PUBLIC_SUPABASE_URL?: string
+    NEXT_PUBLIC_SUPABASE_ANON_KEY?: string
+    GROQ_API_KEY?: string
+  }
+}
+
+interface GroqCheck {
+  status?: string
+}
+
+type StatusTone = 'ok' | 'warn' | 'fail'
+
+function StatusPill({ tone, label }: { tone: StatusTone; label: string }) {
+  const tones: Record<StatusTone, string> = {
+    ok: 'badge-success',
+    warn: 'badge-warning',
+    fail: 'badge-danger',
+  }
+
+  const dots: Record<StatusTone, string> = {
+    ok: 'bg-emerald-500',
+    warn: 'bg-amber-500',
+    fail: 'bg-red-500',
+  }
+
+  return (
+    <span className={`badge ${tones[tone]}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${dots[tone]}`} />
+      {label}
+    </span>
+  )
+}
+
+function CheckRow({ label, tone, status }: { label: string; tone: StatusTone; status: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 border-b border-slate-100 py-2.5 last:border-0 last:pb-0">
+      <span className="text-sm text-slate-600">{label}</span>
+      <StatusPill tone={tone} label={status} />
+    </div>
+  )
+}
 
 export default function SetupPage() {
-  const [envStatus, setEnvStatus] = useState<any>(null)
-  const [groqStatus, setGroqStatus] = useState<any>(null)
+  const [envStatus, setEnvStatus] = useState<EnvCheck | null>(null)
+  const [groqStatus, setGroqStatus] = useState<GroqCheck | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const checkSetup = async () => {
       try {
-        // Check environment variables
         const envResponse = await fetch('/api/env-check')
-        const envData = await envResponse.json()
-        setEnvStatus(envData)
+        setEnvStatus(await envResponse.json())
 
-        // Check Groq API
         const groqResponse = await fetch('/api/test-groq')
-        const groqData = await groqResponse.json()
-        setGroqStatus(groqData)
+        setGroqStatus(await groqResponse.json())
       } catch (error) {
         console.error('Setup check error:', error)
       } finally {
@@ -29,121 +72,138 @@ export default function SetupPage() {
     checkSetup()
   }, [])
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Checking setup...</p>
-        </div>
-      </div>
-    )
-  }
+  const env = envStatus?.environment
+  const isSupabaseConfigured = Boolean(
+    env?.NEXT_PUBLIC_SUPABASE_URL && env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co'
+  )
 
-  const isSupabaseConfigured = envStatus?.environment?.NEXT_PUBLIC_SUPABASE_URL && 
-    envStatus.environment.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co'
+  const boolTone = (value: unknown): StatusTone => (value ? 'ok' : 'fail')
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-center mb-8">Chatbot Setup Status</h1>
-        
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Environment Variables */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4">Environment Variables</h2>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span>Supabase URL:</span>
-                <span className={`px-2 py-1 rounded text-sm ${
-                  envStatus?.environment?.NEXT_PUBLIC_SUPABASE_URL ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}>
-                  {envStatus?.environment?.NEXT_PUBLIC_SUPABASE_URL ? '✅ Set' : '❌ Missing'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Supabase Anon Key:</span>
-                <span className={`px-2 py-1 rounded text-sm ${
-                  envStatus?.environment?.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}>
-                  {envStatus?.environment?.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Groq API Key:</span>
-                <span className={`px-2 py-1 rounded text-sm ${
-                  envStatus?.environment?.GROQ_API_KEY ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}>
-                  {envStatus?.environment?.GROQ_API_KEY ? '✅ Set' : '❌ Missing'}
-                </span>
-              </div>
-            </div>
-          </div>
+    <div className="flex min-h-screen flex-col bg-white">
+      <Header />
 
-          {/* API Status */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4">API Status</h2>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span>Groq API:</span>
-                <span className={`px-2 py-1 rounded text-sm ${
-                  groqStatus?.status === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}>
-                  {groqStatus?.status === 'success' ? '✅ Working' : '❌ Failed'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Supabase:</span>
-                <span className={`px-2 py-1 rounded text-sm ${
-                  isSupabaseConfigured ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {isSupabaseConfigured ? '✅ Configured' : '⚠️ Not Set Up'}
-                </span>
-              </div>
-            </div>
+      <main className="flex-1">
+        <section className="container-page pb-6 pt-16">
+          <div className="mx-auto max-w-2xl text-center">
+            <h1 className="mb-4 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">Setup status</h1>
+            <p className="text-lg leading-relaxed text-slate-500">
+              A quick health check of your environment variables and connected services.
+            </p>
           </div>
-        </div>
+        </section>
 
-        {/* Setup Instructions */}
-        <div className="mt-8 bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">Setup Instructions</h2>
-          
-          {!isSupabaseConfigured ? (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-              <h3 className="font-semibold text-yellow-800 mb-2">Supabase Setup Required</h3>
-              <p className="text-yellow-700 mb-3">
-                To use the full chatbot with authentication and data persistence, you need to set up Supabase.
-              </p>
-              <div className="space-y-2">
-                <p className="text-sm text-yellow-700">1. Go to <a href="https://supabase.com" target="_blank" className="text-blue-600 hover:underline">supabase.com</a> and create a project</p>
-                <p className="text-sm text-yellow-700">2. Get your credentials from Settings → API</p>
-                <p className="text-sm text-yellow-700">3. Update your .env.local file</p>
-                <p className="text-sm text-yellow-700">4. Run the database schema from supabase-schema.sql</p>
+        <section className="container-page pb-20">
+          <div className="mx-auto max-w-3xl">
+            {loading ? (
+              <div className="card flex flex-col items-center justify-center gap-3 py-20">
+                <svg className="h-6 w-6 animate-spin text-slate-400" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                <p className="text-sm text-slate-500">Checking your setup…</p>
               </div>
-            </div>
-          ) : (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-              <h3 className="font-semibold text-green-800 mb-2">✅ Supabase Configured</h3>
-              <p className="text-green-700">Your Supabase is properly set up! You can now use the full chatbot with authentication.</p>
-            </div>
-          )}
+            ) : (
+              <div className="space-y-5">
+                <div className="grid gap-5 md:grid-cols-2">
+                  <div className="card p-6">
+                    <h2 className="mb-4 text-sm font-semibold text-slate-900">Environment variables</h2>
+                    <CheckRow
+                      label="Supabase URL"
+                      tone={boolTone(env?.NEXT_PUBLIC_SUPABASE_URL)}
+                      status={env?.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing'}
+                    />
+                    <CheckRow
+                      label="Supabase anon key"
+                      tone={boolTone(env?.NEXT_PUBLIC_SUPABASE_ANON_KEY)}
+                      status={env?.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Set' : 'Missing'}
+                    />
+                    <CheckRow
+                      label="Groq API key"
+                      tone={boolTone(env?.GROQ_API_KEY)}
+                      status={env?.GROQ_API_KEY ? 'Set' : 'Missing'}
+                    />
+                  </div>
 
-          <div className="flex space-x-4">
-            <a 
-              href="/" 
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-            >
-              Go to Chatbot
-            </a>
-            <a 
-              href="/demo" 
-              className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
-            >
-              Try Demo Version
-            </a>
+                  <div className="card p-6">
+                    <h2 className="mb-4 text-sm font-semibold text-slate-900">Service connectivity</h2>
+                    <CheckRow
+                      label="Groq API"
+                      tone={groqStatus?.status === 'success' ? 'ok' : 'fail'}
+                      status={groqStatus?.status === 'success' ? 'Working' : 'Failed'}
+                    />
+                    <CheckRow
+                      label="Supabase"
+                      tone={isSupabaseConfigured ? 'ok' : 'warn'}
+                      status={isSupabaseConfigured ? 'Configured' : 'Not set up'}
+                    />
+                  </div>
+                </div>
+
+                <div className="card p-6">
+                  <h2 className="mb-4 text-sm font-semibold text-slate-900">Next steps</h2>
+
+                  {isSupabaseConfigured ? (
+                    <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-4">
+                      <h3 className="mb-1 text-sm font-semibold text-emerald-800">Supabase is configured</h3>
+                      <p className="text-sm text-emerald-700">
+                        Everything is wired up. You can sign in and use the full chatbot with persistent history.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border border-amber-100 bg-amber-50 p-4">
+                      <h3 className="mb-1 text-sm font-semibold text-amber-900">Supabase setup required</h3>
+                      <p className="mb-3 text-sm text-amber-800">
+                        Authentication and saved conversations need a Supabase project.
+                      </p>
+                      <ol className="space-y-1.5 text-sm text-amber-800">
+                        {[
+                          <>
+                            Create a project at{' '}
+                            <a
+                              href="https://supabase.com"
+                              target="_blank"
+                              rel="noreferrer"
+                              className="font-medium underline underline-offset-2"
+                            >
+                              supabase.com
+                            </a>
+                          </>,
+                          'Copy your credentials from Settings → API',
+                          'Add them to your .env.local file',
+                          'Run the schema in supabase-schema.sql',
+                        ].map((step, i) => (
+                          <li key={i} className="flex gap-2.5">
+                            <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-amber-200/70 text-[11px] font-semibold text-amber-900">
+                              {i + 1}
+                            </span>
+                            <span>{step}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    <Link href="/" className="btn btn-primary">
+                      Go to chatbot
+                    </Link>
+                    <Link href="/demo" className="btn btn-secondary">
+                      Try demo version
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
+
+      <Footer />
     </div>
   )
 }
